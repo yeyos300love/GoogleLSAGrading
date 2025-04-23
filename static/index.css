@@ -1,0 +1,1066 @@
+/* Dark theme colors */
+:root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #363636;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --accent-color: #4CAF50;
+    --accent-hover: #45a049;
+    --border-color: #404040;
+    --table-header: #2d2d2d;
+    --table-row-hover: #363636;
+    --robot-grey: #bdc3c7;
+    --robot-dark: #333;
+    --robot-blue: #3498db;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    box-sizing: border-box;
+    font-family: 'Rubik';
+    letter-spacing: 3px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* Loading states */
+.loading-state h3 {
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.form-container {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: var(--bg-secondary);
+    display: inline-block;
+    border: 1px solid var(--border-color);
+}
+
+/* Buttons */
+.action-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Form styles */
+#two_factor_form {
+    margin-top: 20px;
+}
+
+#two_factor_code {
+    padding: 8px;
+    margin-right: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+#two_factor_code:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Table styles */
+#results-table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 100%;
+    max-width: none;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    table-layout: fixed;
+    line-height: normal;
+}
+
+#results-table thead {
+    display: table-header-group;
+}
+
+#results-table tbody {
+    display: table-row-group;
+    /* max-height: calc(100vh - 300px); */
+    overflow-y: auto;
+}
+
+/* Update View Transcript button styles */
+.view-transcript-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 24px !important;
+    line-height: 24px !important;
+    padding: 0 8px !important;
+    margin: 0;
+    border-radius: 4px;
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.view-transcript-btn:hover {
+    background-color: var(--accent-hover);
+    transform: translate(-50%, -50%) translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Add this after the .view-transcript-btn styles */
+.view-transcript-btn.failure {
+    background-color: #ff4444;  /* Red color for failure state */
+}
+
+.view-transcript-btn.failure:hover {
+    background-color: #ff6666;  /* Lighter red on hover */
+}
+
+/* Remove any conflicting table styles */
+.table_cont {
+    overflow-x: hidden;
+}
+
+#output {
+    overflow-x: hidden;
+    line-height: normal;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#results-body {
+    display: block;
+    overflow-y: auto;
+    max-height: calc(100vh - 300px);
+}
+
+/* Table cell and header styles */
+#results-table th,
+#results-table td {
+    position: relative;
+    padding: 0 12px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 60px !important;
+    line-height: 30px !important;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 14px;
+    font-weight: normal;
+    box-sizing: border-box !important;
+}
+
+/* Header specific styles */
+#results-table th {
+    background-color: var(--table-header);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Regular cell content styles */
+#results-table td {
+    overflow: visible;
+}
+
+/* Text-only cell styles (first and third columns) */
+#results-table td:nth-child(1),
+#results-table td:nth-child(3) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Dropdown cell styles */
+#results-table td:nth-child(2) {
+    padding: 0 !important;
+    position: relative;
+    overflow: visible;
+    background-color: var(--bg-tertiary);
+}
+
+/* Button cell styles */
+#results-table td:nth-child(4) {
+    padding: 0 !important;
+}
+
+/* Update dropdown styles */
+.grade-dropdown {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0 24px 0 8px;
+    height: 30px;
+    line-height: 30px;
+    border: none;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 14px;
+    z-index: 10;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 20px;
+}
+
+.grade-dropdown:focus {
+    height: auto;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.grade-dropdown option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 8px;
+    font-size: 14px;
+}
+
+/* Add hover effect for dropdown options */
+.grade-dropdown option:hover,
+.grade-dropdown option:focus {
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+}
+
+/* Add transition for smoother interaction */
+.grade-dropdown,
+.grade-dropdown:focus,
+.grade-dropdown option {
+    transition: all 0.2s ease;
+}
+
+/* Add these new styles */
+.grade-dropdown option:checked {
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+}
+
+.grade-dropdown:not(:focus) {
+    /* Ensure dropdown closes immediately after selection */
+    pointer-events: auto;
+}
+
+.grade-dropdown option:active {
+    /* Immediately apply selection */
+    background-color: var(--accent-color);
+}
+
+/* Transcript text */
+#transcriptText {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 4px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding-bottom: 30px;
+    margin-bottom: 15px;
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    right: -35%;
+    top: 0;
+    width: 35%;
+    height: 100vh;
+    background-color: var(--bg-secondary);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+    transition: right 0.3s ease;
+    z-index: 1002;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+.modal.show {
+    right: 0;
+}
+
+.modal-content {
+    height: 100vh;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    padding-bottom: 40px;
+}
+
+/* Update the modal and main content styles */
+#main-content {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+#main-content.shift {
+    width: 65%;
+    margin-right: 35%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+
+/* Update close button position */
+.close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 24px;
+    color: var(--text-primary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    transition: all 0.3s ease;
+}
+
+.close:hover {
+    background-color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    color: var(--text-primary);
+}
+
+/* Remove unused styles */
+.let_space,
+.c_grid,
+.grid,
+.box2,
+.box3,
+.table_cont,
+.file_submit {
+    display: none;
+}
+
+/* element */
+  
+.let_space{
+    letter-spacing: 2px;
+}
+
+
+.c_grid{
+    display: grid;
+    justify-items: center;
+    align-items: center;
+    grid-gap: 2vmax;
+}
+   
+.grid{
+    display: grid;
+    grid-gap: 2vmax;
+}
+   
+  
+   
+.box2{
+    grid-template-columns: 1fr 1fr;
+}
+  
+.box3{
+    grid-template-columns: 1fr 1fr 1fr;
+} 
+
+/* element */
+
+.table_cont{
+    overflow-x: scroll;
+    width: 70vw;
+}
+
+table {
+    border-collapse: collapse;
+    letter-spacing: 3px;
+    /* width: 100%; */
+}
+
+form{
+    margin: 2vmax 10vmax;
+    padding:3vmax;
+    border: 1px solid #dddddd;
+}
+
+label{
+    font-size: 1.5vmax;
+}
+
+input{
+    padding:1vmax;
+    font-size: 1.3vmax;
+    border: 1px solid #dddddd;
+    outline: none;
+}
+
+select{
+    padding:1vmax;
+    font-size: 1.3vmax;
+    border: 1px solid #dddddd;
+    outline: none;
+    letter-spacing: 3px;
+}
+
+option{
+    font-size: 1.5vmax;
+    letter-spacing: 3px;
+}
+
+.file_submit{
+  margin-top: 1vmax;
+  border: 1px solid #55acee;
+  outline: none;
+  background-color: #55acee;
+  color: white;
+  padding: 1vmax;
+  cursor: pointer;
+  transition: 0.3s;
+  letter-spacing: 3px;
+}
+
+.file_submit:hover{
+  background-color: white;
+  color: #55acee
+}
+
+/* Robot Animation */
+#container {
+    position: relative;
+    height: 100px;
+    width: 100px;
+    margin: 20px auto;
+}
+
+#bot {
+    position: absolute;
+    height: 30px;
+    width: 50px;
+    background-color: var(--robot-grey);
+    animation: 2s botMotion linear infinite;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#eyes {
+    position: absolute;
+    width: 40px;
+    height: 20px;
+    top: 5px;
+    left: 5px;
+    background-color: var(--robot-dark);
+}
+
+.eye {
+    height: 10px;
+    width: 5px;
+    background-color: var(--robot-blue);
+    animation: 2s eyeBlink 0.35s linear infinite;
+    border-radius: 40%;
+}
+
+#left {
+    position: absolute;
+    top: 50%;
+    left: 25%;
+    margin-top: -5px;
+}
+
+#right {
+    position: absolute;
+    top: 50%;
+    right: 25%;
+    margin-top: -5px;
+}
+
+.finger {
+    position: absolute;
+    height: 10px;
+    width: 5px;
+    background-color: var(--robot-grey);
+}
+
+#leftarm {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 30px;
+    width: 25px;
+}
+
+#leftarm .finger:nth-of-type(1) {
+    animation: 2s lefttopfinger linear infinite;
+}
+
+#leftarm .finger:nth-of-type(2) {
+    animation: 2s leftbotfinger linear infinite;
+}
+
+#rightarm {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 30px;
+    width: 25px;
+}
+
+#rightarm .finger:nth-of-type(1) {
+    animation: 2s righttopfinger linear infinite;
+}
+
+#rightarm .finger:nth-of-type(2) {
+    animation: 2s rightbotfinger linear infinite;
+}
+
+#neck {
+    position: absolute;
+    top: 30px;
+    width: 40px;
+    height: 3px;
+    background-color: var(--robot-dark);
+    left: 50%;
+    transform: translateX(-50%);
+    animation: 2s neckMotion linear infinite;
+}
+
+#body {
+    position: absolute;
+    top: 33px;
+    width: 50px;
+    height: 10px;
+    background-color: var(--robot-grey);
+    left: 50%;
+    transform: translateX(-50%);
+    animation: 2s bodyMotion linear infinite;
+}
+
+#legs {
+    position: absolute;
+    top: 33px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.foot {
+    width: 25px;
+    height: 10px;
+    background-color: var(--robot-grey);
+}
+
+#legs #left {
+    position: absolute;
+    top: 0;
+    left: -25px;
+    animation: 2s leftfoot linear infinite;
+}
+
+#legs #right {
+    position: absolute;
+    top: 0;
+    right: -25px;
+    animation: 2s rightfoot linear infinite;
+}
+
+/* Robot Animations */
+@keyframes lefttopfinger {
+    0% { left: 0; top: 5px; }
+    30% { left: -10px; top: 2px; }
+    60% { left: -10px; top: 5px; }
+    100% { left: 0; top: 5px; }
+}
+
+@keyframes leftbotfinger {
+    0% { left: 0; bottom: 5px; }
+    30% { left: -10px; bottom: 2px; }
+    60% { left: -10px; bottom: 5px; }
+    100% { left: 0; bottom: 5px; }
+}
+
+@keyframes righttopfinger {
+    0% { right: 0; top: 5px; }
+    30% { right: -10px; top: 2px; }
+    60% { right: -10px; top: 5px; }
+    100% { right: 0; top: 5px; }
+}
+
+@keyframes rightbotfinger {
+    0% { right: 0; bottom: 5px; }
+    30% { right: -10px; bottom: 2px; }
+    60% { right: -10px; bottom: 5px; }
+    100% { right: 0; bottom: 5px; }
+}
+
+@keyframes leftfoot {
+    0% { top: 0; }
+    30% { top: 12px; }
+    60% { top: 0; }
+    100% { top: 0; }
+}
+
+@keyframes rightfoot {
+    0% { top: 0; }
+    30% { top: 0; }
+    60% { top: 12px; }
+    100% { top: 0; }
+}
+
+@keyframes botMotion {
+    0% { top: 0; }
+    30% { top: -13px; }
+    60% { top: -13px; }
+    100% { top: 0; }
+}
+
+@keyframes neckMotion {
+    0% { top: 30px; }
+    30% { top: 17px; }
+    60% { top: 17px; }
+    100% { top: 30px; }
+}
+
+@keyframes bodyMotion {
+    0% { top: 33px; }
+    30% { top: 20px; }
+    60% { top: 20px; }
+    100% { top: 33px; }
+}
+
+@keyframes eyeBlink {
+    0% { background-color: var(--robot-blue); }
+    15% { background-color: var(--robot-dark); }
+    30% { background-color: var(--robot-blue); }
+    85% { background-color: var(--robot-dark); }
+    100% { background-color: var(--robot-blue); }
+}
+
+/* Button Container */
+.button-container {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: var(--bg-primary);
+    width: 100%;
+    max-width: none;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.send-grader-btn {
+    font-size: 18px;
+    padding: 12px 30px;
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.send-grader-btn:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.send-grader-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Header and Copy Button Styles */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.title-group h4 {
+    margin: 0;
+}
+
+.copy-button {
+    width: 32px;
+    height: 32px;
+    padding: 8px;
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+    background-color: var(--accent-hover);
+}
+
+.copy-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.copy-button.copied {
+    background-color: #2196F3;
+}
+
+/* Update the typing animation styles */
+.typing-animation {
+    overflow: hidden;
+    position: relative;
+    white-space: nowrap;
+    margin: 0 auto;
+    display: inline-block;
+    animation: typing 1s steps(40, end) forwards;
+}
+
+/* Remove the cursor pseudo-element and its animations */
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+/* Add styles for error state - add to your existing CSS */
+#error-state {
+    margin-top: 50px;
+}
+
+#error-state h3 {
+    color: #ff6b6b;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+#error-state .action-button {
+    margin-top: 20px;
+    font-size: 18px;
+    padding: 12px 30px;
+}
+
+/* Update overlay styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.modal-overlay.show {
+    display: block;
+}
+
+/* Update the results state container */
+#results-state {
+    display: none;
+    width: 80%;
+    max-width: none;
+    margin: 0 auto;
+    padding: 0 20px;
+    overflow: hidden;
+}
+
+/* Add download button styles */
+.download-btn {
+    font-size: 18px;
+    padding: 12px 30px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.download-btn:hover {
+    background-color: var(--table-header);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.download-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Grade Again button styles */
+.grade-again-btn {
+    font-size: 18px;
+    padding: 12px 30px;
+    background-color: #2196F3;  /* Different color to distinguish it */
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.grade-again-btn:hover {
+    background-color: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.grade-again-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.grade-again-btn.small {
+    font-size: 14px; /* Smaller font size */
+    padding: 8px 16px; /* Adjust padding for a smaller button */
+}
+
+/* Initial state styles */
+#initial-state {
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0;
+}
+
+h1 {
+    margin: 0;
+    padding: 20px 0;
+}
+
+/* Loading states should be centered */
+#login-loading,
+#transcript-loading,
+#error-state {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Timer styles */
+.timer-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--bg-secondary);
+    padding: 12px 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    color: var(--text-secondary);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.timer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timer-row.total {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+.timer-label {
+    color: var(--text-primary);
+    font-weight: 500;
+    min-width: 75px;
+}
+
+#fetch-timer,
+#grade-timer,
+#total-timer {
+    font-family: monospace;
+    font-size: 16px;
+    color: var(--accent-color);
+    min-width: 50px;
+}
+
+#total-timer {
+    font-weight: bold;
+}
+
+/* Button group in initial state */
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Upload button styles */
+.upload-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+    background-color: var(--table-header);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.upload-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tooltip container */
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Tooltip styles */
+.tooltip {
+    visibility: hidden;
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 100;
+}
+
+/* Show tooltip on hover */
+.tooltip-container:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Add arrow to tooltip */
+.tooltip::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent var(--bg-secondary) transparent transparent;
+}
+
+/* Test data indicator styles */
+.test-data-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: var(--bg-secondary);
+    padding: 12px 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    color: var(--text-secondary);
+    z-index: 1000;
+}
+
+.test-data-label {
+    color: var(--accent-color);
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Add these after the grade-dropdown styles */
+.grade-dropdown.failure-grade {
+    background-color: rgba(255, 68, 68, 0.1); /* Slight red tint */
+}
+
+.grade-dropdown.failure-grade option {
+    background-color: var(--bg-secondary); /* Keep options normal */
+}
+
+.grade-dropdown.failure-grade option:first-child {
+    color: #ff4444; /* Red color for placeholder */
+    font-style: italic;
+}

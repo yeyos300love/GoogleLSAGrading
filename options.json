@@ -1,0 +1,42 @@
+{
+    "GRADES": [
+      "Very satisfied",
+      "Somewhat satisfied",
+      "Neither satisfied nor dissatisfied",
+      "Somewhat dissatisfied",
+      "Very dissatisfied"
+    ],
+    "GRADE_SECONDARY_POS": [
+      "Booked",
+      "Could convert to a booked client",
+      "Relevant",
+      "High value to the business",
+      "Other"
+    ],
+    "GRADE_SECONDARY_NEG": [
+      "Outside service area",
+      "Service not offered",
+      "Not ready to book services",
+      "Spam/Robocall",
+      "Duplicate lead",
+      "Employment/Sales Pitch",
+      "Other"
+    ],
+    "GRADE_SECONDARY_POS_FULL": [
+      "It converted into a booked customer or client",
+      "It could convert into a booked customer or client soon",
+      "It is relevant to the services the business provides",
+      "It is for a service that generates high value for the busniess",
+      "Other"
+    ],
+    "GRADE_SECONDARY_NEG_FULL": [
+      "It is not located in the service area(s) for the busniess",
+      "It is for a service the business does not provide",
+      "The person calling was not ready to book services",
+      "It is spam (e.g., unwanted robocall or message, silent caller scam)",
+      "It is a duplicate lead (i.e., a person contacted the business more than once)",
+      "It is a person seeking employment or trying to sell a product or service",
+      "Other"
+    ]
+}
+  
