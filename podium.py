@@ -45,9 +45,14 @@ def create_driver():
             replit_options.add_argument('--no-sandbox')
             replit_options.add_argument('--headless')
             replit_options.add_argument('--disable-dev-shm-usage')
-            replit_options.binary_location = '/usr/bin/chromium'
             
-            service = Service('/usr/bin/chromedriver')
+            # Use environment variables set in replit.nix
+            chrome_binary = os.getenv('CHROME_BIN', '/usr/bin/chromium')
+            chromedriver_path = os.getenv('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
+            
+            replit_options.binary_location = chrome_binary
+            service = Service(executable_path=chromedriver_path)
+            
             driver = webdriver.Chrome(
                 service=service,
                 options=replit_options
