@@ -39,17 +39,36 @@ def create_driver():
     global driver
     
     try:
-        # Try using the pre-configured Chrome in Docker first
-        driver = webdriver.Remote(
-            command_executor='http://localhost:4444/wd/hub',
-            options=options
-        )
-    except:
+        # Check if we're running in Replit
+        if 'REPL_ID' in os.environ:
+            replit_options = webdriver.ChromeOptions()
+            replit_options.add_argument('--no-sandbox')
+            replit_options.add_argument('--headless')
+            replit_options.add_argument('--disable-dev-shm-usage')
+            replit_options.binary_location = '/usr/bin/chromium'
+            
+            service = Service('/usr/bin/chromedriver')
+            driver = webdriver.Chrome(
+                service=service,
+                options=replit_options
+            )
+        else:
+            # Try using the pre-configured Chrome in Docker first
+            driver = webdriver.Remote(
+                command_executor='http://localhost:4444/wd/hub',
+                options=options
+            )
+    except Exception as e:
         # If that fails (i.e., running locally), use ChromeDriverManager
-        driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=options
-        )
+        try:
+            driver = webdriver.Chrome(
+                service=Service(ChromeDriverManager().install()),
+                options=options
+            )
+        except Exception as inner_e:
+            print(f"Failed to create driver: {str(inner_e)}")
+            raise
+    
     return driver
 
 def wait_and_find_element(by, value, timeout=40):

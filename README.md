@@ -32,29 +32,6 @@ View Containers
 docker ps -a
 ```
 
-### 1.2 Windows Option: PyInstaller 
-
-Bundle application into a standalone executable for simple distribution.
-
-- `build` contains source code
-- `dist` contains executable
-- `app.spec` contains specifications
-- `GLSAgrader.exe`
-
-Initial bundle
-
-```bash
-pyinstaller --onefile app.py
-```
-
-Rebuilding executable
-
-- Delete existing `dist` & `build` directories
-- Rebuild
-```bash
-pyinstaller app.spec
-```
-
 ## 2. Developer Notes
 
 ### 2.1 Test Mode
