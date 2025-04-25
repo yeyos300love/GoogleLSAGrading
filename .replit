@@ -13,6 +13,7 @@ deploymentTarget = "cloudrun"
 
 [env]
 PYTHONPATH = "${PYTHONPATH}:/home/runner/${REPL_SLUG}"
+PORT = "8080"
 
 [packager]
 language = "python3"
