@@ -1,8 +1,7 @@
 { pkgs }: {
     deps = [
-        pkgs.python311
+        pkgs.python311Full
         pkgs.python311Packages.pip
-        pkgs.python311Packages.distutils
         pkgs.chromium
         pkgs.chromedriver
         pkgs.geckodriver
@@ -17,8 +16,9 @@
         pkgs.nodejs
     ];
     env = {
-        PYTHONBIN = "${pkgs.python311}/bin/python3.11";
+        PYTHONBIN = "${pkgs.python311Full}/bin/python3.11";
         CHROME_BIN = "${pkgs.chromium}/bin/chromium";
         CHROMEDRIVER_PATH = "${pkgs.chromedriver}/bin/chromedriver";
+        PYTHONPATH = "${pkgs.python311Packages.setuptools}/${pkgs.python311.sitePackages}";
     };
 } 
