@@ -2,6 +2,7 @@
     deps = [
         pkgs.python311
         pkgs.python311Packages.pip
+        pkgs.python311Packages.distutils
         pkgs.chromium
         pkgs.chromedriver
         pkgs.geckodriver
