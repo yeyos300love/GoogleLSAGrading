@@ -51,11 +51,17 @@ python podium.py '(971) 998-9211', '(509) 637-5941'
 ```
 
 ### 2.3 Virtual Enviornment
+Setup
 ```bash
 python -m venv glsag_app_env
 ```
+Activate: Command Prompt (cmd)
 ```bash
 glsag_app_env\Scripts\activate
+```
+Activate: Powershell (ps)
+```bash
+.\glsag_app_env\Scripts\Activate.ps1
 ```
 ```bash
 pip install -r requirements.txt

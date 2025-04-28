@@ -58,21 +58,16 @@ def create_driver():
                 options=replit_options
             )
         else:
-            # Try using the pre-configured Chrome in Docker first
-            driver = webdriver.Remote(
-                command_executor='http://localhost:4444/wd/hub',
-                options=options
-            )
-    except Exception as e:
-        # If that fails (i.e., running locally), use ChromeDriverManager
-        try:
+            chrome_service = Service()
+            chrome_service.creation_flags = 0x08000000  # No Window flag for Windows
             driver = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()),
+                service=chrome_service,
                 options=options
             )
-        except Exception as inner_e:
-            print(f"Failed to create driver: {str(inner_e)}")
-            raise
+            
+    except Exception as e:
+        print(f"Failed to create driver: {str(e)}")
+        raise
     
     return driver
 
