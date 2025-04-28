@@ -45,6 +45,8 @@ def create_driver():
             replit_options.add_argument('--no-sandbox')
             replit_options.add_argument('--headless')
             replit_options.add_argument('--disable-dev-shm-usage')
+            replit_options.add_argument('--window-size=1920,1080')  # Add window size
+            replit_options.add_argument('--start-maximized')  # Add maximize
             
             # Use environment variables set in replit.nix
             chrome_binary = os.getenv('CHROME_BIN', '/usr/bin/chromium')
