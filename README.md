@@ -11,25 +11,10 @@ Run sentiment analysis on phone call (conversaion) transcripts.
 
 ## 1. Running Application
 
-### 1.1 All: Docker
+Hosting on Replit
 
-Containerizing application for deployment & scalability.
-
-Running Container(s)
 ```bash
-docker compose up
-```
-Build Image: `yeyos_projs`
-```bash
-docker build -t yeyos_projs:GLSA_grading .
-```
-Run Container
-```bash
-docker run -p 8080:5001 yeyos_projs:GLSA_grading
-```
-View Containers
-```bash
-docker ps -a
+python app.py
 ```
 
 ## 2. Developer Notes
@@ -63,9 +48,11 @@ Activate: Powershell (ps)
 ```bash
 .\glsag_app_env\Scripts\Activate.ps1
 ```
+Install Dependancies
 ```bash
 pip install -r requirements.txt
 ```
+Deactivate
 ```bash
 deactivate
 ```
