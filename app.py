@@ -83,8 +83,8 @@ def resource_path(relative_path):
 # begin the retrieving transcript subprocess
 def fetch_transcript():
     podium_script = resource_path('podium.py')
-    #python_executable = sys.executable
-    get_transcript_result = subprocess.Popen(['python', podium_script] + customers.get_phone_nums(), 
+    python_executable = sys.executable
+    get_transcript_result = subprocess.Popen([python_executable, podium_script] + customers.get_phone_nums(), 
                                            stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE,
@@ -280,11 +280,11 @@ def submit_2fa():
                 #print(transcripts[i])
                 
                 if not transcripts[i].startswith('FAILED'):
-                    # grade = random.choice(GRADES)
-                    # grade_secondary = "" #random.choice(["Booked", "Spam"])
+                    grade = random.choice(GRADES)
+                    grade_secondary = "" #random.choice(["Booked", "Spam"])
                     # # simulate grade time
                     # time.sleep(0.5)
-                    grade, grade_secondary = clean_response(sentiment_analysis(transcripts[i]))
+                    #grade, grade_secondary = clean_response(sentiment_analysis(transcripts[i]))
                 else:
                     grade = ""
                     grade_secondary = ""

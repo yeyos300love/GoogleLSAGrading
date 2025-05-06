@@ -172,6 +172,8 @@ if __name__ == '__main__':
     # podium.py '(971) 998-9211', '(509) 637-5941'
 
     examples = sys.argv[1:]
+    #examples = sys.argv[1:-1] # remove python, podium.py, & closing ]
+    #examples[0] = examples[0][1:] # remove opening [
     #print(examples)
     #examples = phone_nums_example
 
