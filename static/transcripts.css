@@ -46,21 +46,6 @@
     letter-spacing: 0.5px;
 }
 
-/* Transcript Text */
-#transcriptText {
-    flex: 1;
-    overflow-y: auto;
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-size: 14px;
-    line-height: 1.5;
-    padding: 15px;
-    border-radius: 4px;
-    margin: 0;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .transcripts-container {

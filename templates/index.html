@@ -112,25 +112,28 @@
                     loadingFrame.style.display = "none";
                     initialState.style.display = "block";
                 } else if (event.data.type === '2fa_submit') {
+                    // Show fetch transcripts message
+                    loadingFrame.contentWindow.postMessage('fetch_transcripts', '*');
+                    
                     // Handle 2FA code submission
-                    fetch('/submit-2fa', {
+                    fetch('/fetch-transcripts', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ code: event.data.code })
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            loadingFrame.contentWindow.postMessage({
-                                type: 'grading_progress',
-                                current: 0,
-                                total: 0  // We don't know the total yet, it will be updated when grading starts
-                            }, '*');
-                        } else {
-                            loadingFrame.contentWindow.postMessage('show_error', '*');
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
                         }
+                        return response.text();  // Get HTML response
+                    })
+                    .then(html => {
+                        // Navigate to the transcript results page
+                        document.open();
+                        document.write(html);
+                        document.close();
                     })
                     .catch(() => {
                         loadingFrame.contentWindow.postMessage('show_error', '*');

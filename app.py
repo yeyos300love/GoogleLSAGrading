@@ -73,8 +73,8 @@ def home():
 def transcripts():
     return render_template('transcripts.html')
 
-@app.route('/transcript-result')
-def transcript_result():
+@app.route('/transcript-result-test')
+def transcript_result_test():
     # Load test transcript data
     with open('sample_data/sample_transcripts.json', 'r', encoding='utf-8') as f:
         test_transcripts = json.load(f)
@@ -149,21 +149,17 @@ def fetch_transcripts():
     transcripts = [t for t in current_output.split('-' * 25) if t]
     transcripts = [t[1:] for t in transcripts]
     
-    # Return transcripts
-    # return jsonify({
-    #     "status": "fetch_complete",
-    #     "transcripts": transcripts,
-    #     "total": len(transcripts)
-    # })
-
-    # Create a list of dictionaries with the required format
-    transcripts_data = []
-    for transcript in transcripts:
-        transcripts_data.append({
-            'customer': transcript['customer'],
-            'transcript': transcript['transcript']
-        })
+    print('customers:',len(customers.get_phone_nums()))
     
+    # Create the transcripts_data in the expected format
+    transcripts_data = []
+    for i, transcript in enumerate(transcripts):
+        transcripts_data.append({
+            'customer': customers.get_phone_nums()[i] if i < len(customers.get_phone_nums()) else "Unknown",
+            'transcript': transcript
+        })
+
+    # Return transcripts
     return render_template('transcript_result.html', transcripts=transcripts_data)
 
 @app.route('/grade-transcripts', methods=['POST'])

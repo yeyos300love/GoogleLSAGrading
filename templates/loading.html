@@ -26,8 +26,10 @@
                     
                     <!-- 2FA Form (Hidden by default) -->
                     <div id="two_factor_form" style="display: none;">
-                        <input type="text" id="two_factor_code" placeholder="enter code (ex. 123456)">
-                        <button onclick="submit_two_factor()" class="action-button">Submit</button>
+                        <form id="twoFactorForm" onsubmit="submit_two_factor(event)">
+                            <input type="text" id="two_factor_code" placeholder="enter code (ex. 123456)">
+                            <button type="submit" class="action-button">Submit</button>
+                        </form>
                     </div>
 
                     <!-- Loading Animation -->
@@ -68,8 +70,8 @@
                     statusMessage.textContent = "Hold on, let's get you logged into Podium...";
                     twoFactorForm.style.display = 'block';
                     container.style.display = 'none';
-                } else if (event.data === 'fetch_transcripts') {
-                    statusMessage.textContent = "Let's fetch those transcripts...";
+                } else if (event.data.type === 'fetch_transcripts') {
+                    statusMessage.textContent = `Let's fetch those transcripts...(${event.data.current}/${event.data.total})`;
                     twoFactorForm.style.display = 'none';
                     container.style.display = 'block';
                 } else if (event.data.type === 'grading_progress') {
@@ -79,9 +81,14 @@
                 }
             });
 
-            function submit_two_factor() {
+            function submit_two_factor(event) {
+                event.preventDefault();
                 const code = document.getElementById('two_factor_code').value.trim();
                 if (code) {
+                    // Hide form and show loading animation
+                    twoFactorForm.style.display = 'none';
+                    container.style.display = 'block';
+                    
                     window.parent.postMessage({ type: '2fa_submit', code: code }, '*');
                 }
             }
