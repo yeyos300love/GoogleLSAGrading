@@ -19,15 +19,7 @@ python app.py
 
 ## 2. Developer Notes
 
-### 2.1 Test Mode
-
-Application has two modes, determined by the `TestDataUse` class in `app.py`.
-
-- **Test Data Mode**: When `TestDataUse` is set to `True`, the application will use predefined test data found in `sample_data`.
-
-- **Production Mode**: When `TestDataUse` class is set to `False`, the application will expect either user-uploaded data (e.g., from a CSV file) or correctly fetched data.
-
-### 2.2 Running Individual Scripts
+### 2.1 Running Individual Scripts
 
 Run  `podium.py`, to web scrape a list of phone numbers from podium, e.g.,
 
@@ -35,7 +27,7 @@ Run  `podium.py`, to web scrape a list of phone numbers from podium, e.g.,
 python podium.py '(971) 998-9211', '(509) 637-5941'
 ```
 
-### 2.3 Virtual Enviornment
+### 2.2 Virtual Enviornment
 Setup
 ```bash
 python -m venv glsag_app_env

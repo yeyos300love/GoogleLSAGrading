@@ -15,24 +15,17 @@
     --robot-blue: #3498db;
 }
 
+/* Base layout */
 html, body {
     margin: 0;
     padding: 0;
-    list-style: none;
+    height: 100vh;
+    overflow: hidden;
     box-sizing: border-box;
     font-family: 'Rubik';
     letter-spacing: 3px;
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    overflow-y: auto;
-    overflow-x: hidden;
-    width: 100%;
-}
-
-/* Loading states */
-.loading-state h3 {
-    color: var(--text-primary);
-    margin-bottom: 20px;
 }
 
 .form-container {
@@ -87,14 +80,13 @@ html, body {
 /* Table styles */
 #results-table {
     margin: 20px auto;
-    border-collapse: collapse;
     width: 100%;
-    max-width: none;
     background-color: var(--bg-secondary);
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     table-layout: fixed;
-    line-height: normal;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 #results-table thead {
@@ -142,24 +134,20 @@ html, body {
     background-color: #ff6666;  /* Lighter red on hover */
 }
 
-/* Remove any conflicting table styles */
-.table_cont {
-    overflow-x: hidden;
-}
-
 #output {
-    overflow-x: hidden;
-    line-height: normal;
+    flex: 1;
     width: 100%;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 #results-body {
-    display: block;
-    overflow-y: auto;
     max-height: calc(100vh - 300px);
+    overflow-y: auto;
 }
 
 /* Table cell and header styles */
@@ -284,30 +272,28 @@ html, body {
 #transcriptText {
     flex: 1;
     overflow-y: auto;
-    margin-top: 15px;
+    margin: 0;
     padding: 15px;
-    border-radius: 4px;
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
     white-space: pre-wrap;
     word-wrap: break-word;
-    padding-bottom: 30px;
-    margin-bottom: 15px;
 }
 
-/* Modal styles */
+/* Modal and Overlay Styles */
 .modal {
     position: fixed;
-    right: -35%;
+    right: -37%;
     top: 0;
-    width: 35%;
+    width: 37%;
     height: 100vh;
     background-color: var(--bg-secondary);
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
     transition: right 0.3s ease;
-    z-index: 1002;
-    overflow-y: hidden;
-    overflow-x: hidden;
+    z-index: 1004;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .modal.show {
@@ -315,41 +301,44 @@ html, body {
 }
 
 .modal-content {
-    height: 100vh;
-    padding: 25px;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-secondary);
-    padding-bottom: 40px;
+    overflow: hidden;
 }
 
-/* Update the modal and main content styles */
-#main-content {
-    padding: 0 20px;
-    display: flex;
-    flex-direction: column;
-    z-index: 1001;
-    overflow-y: auto;
-    overflow-x: hidden;
-    width: 100%;
-    transition: all 0.3s ease;
-}
-
-#main-content.shift {
-    width: 65%;
-    margin-right: 35%;
-    position: fixed;
-    left: 0;
+.modal-header {
+    position: sticky;
     top: 0;
-    bottom: 0;
-    overflow-y: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    background-color: var(--bg-secondary);
+    padding: 10px 25px;
+    z-index: 1005;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* Update close button position */
+.title-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-right: 40px;
+    flex: 1;
+}
+
+.title-group h4 {
+    margin: 0;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
 .close {
     position: absolute;
-    right: 20px;
-    top: 20px;
+    right: 25px;
+    top: 10px;
     font-size: 24px;
     color: var(--text-primary);
     cursor: pointer;
@@ -363,6 +352,7 @@ html, body {
     border-radius: 50%;
     background-color: var(--bg-tertiary);
     transition: all 0.3s ease;
+    z-index: 1006;
 }
 
 .close:hover {
@@ -370,62 +360,76 @@ html, body {
     transform: scale(1.1);
 }
 
+.copy-button {
+    width: 32px;
+    height: 32px;
+    padding: 8px;
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+    background-color: var(--accent-hover);
+}
+
+.copy-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.copy-button.copied {
+    background-color: #2196F3;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1003;
+    pointer-events: none;
+}
+
+.modal-overlay.show {
+    display: none;
+}
+
+/* Main content - SINGLE SOURCE OF TRUTH */
+#main-content {
+    height: calc(100vh - 60px);
+    margin-top: 60px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 998;
+    transition: all 0.3s ease;
+}
+
+/* Shift class for when modal is open */
+#main-content.shift {
+    width: 63%;
+    margin-right: 37%;
+}
+
 /* Headings */
 h1, h2, h3, h4 {
     color: var(--text-primary);
 }
 
-/* Remove unused styles */
-.let_space,
-.c_grid,
-.grid,
-.box2,
-.box3,
-.table_cont,
-.file_submit {
-    display: none;
-}
-
-/* element */
-  
-.let_space{
-    letter-spacing: 2px;
-}
-
-
-.c_grid{
-    display: grid;
-    justify-items: center;
-    align-items: center;
-    grid-gap: 2vmax;
-}
-   
-.grid{
-    display: grid;
-    grid-gap: 2vmax;
-}
-   
-  
-   
-.box2{
-    grid-template-columns: 1fr 1fr;
-}
-  
-.box3{
-    grid-template-columns: 1fr 1fr 1fr;
-} 
-
-/* element */
-
-.table_cont{
-    overflow-x: scroll;
-    width: 70vw;
-}
-
 table {
     border-collapse: collapse;
-    letter-spacing: 3px;
-    /* width: 100%; */
 }
 
 form{
@@ -458,230 +462,22 @@ option{
     letter-spacing: 3px;
 }
 
-.file_submit{
-  margin-top: 1vmax;
-  border: 1px solid #55acee;
-  outline: none;
-  background-color: #55acee;
-  color: white;
-  padding: 1vmax;
-  cursor: pointer;
-  transition: 0.3s;
-  letter-spacing: 3px;
+.file_submit {
+    margin-top: 1vmax;
+    border: 1px solid #55acee;
+    outline: none;
+    background-color: #55acee;
+    color: white;
+    padding: 1vmax;
+    cursor: pointer;
+    transition: 0.3s;
+    letter-spacing: 3px;
+    display: block;
 }
 
-.file_submit:hover{
-  background-color: white;
-  color: #55acee
-}
-
-/* Robot Animation */
-#container {
-    position: relative;
-    height: 100px;
-    width: 100px;
-    margin: 20px auto;
-}
-
-#bot {
-    position: absolute;
-    height: 30px;
-    width: 50px;
-    background-color: var(--robot-grey);
-    animation: 2s botMotion linear infinite;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-#eyes {
-    position: absolute;
-    width: 40px;
-    height: 20px;
-    top: 5px;
-    left: 5px;
-    background-color: var(--robot-dark);
-}
-
-.eye {
-    height: 10px;
-    width: 5px;
-    background-color: var(--robot-blue);
-    animation: 2s eyeBlink 0.35s linear infinite;
-    border-radius: 40%;
-}
-
-#left {
-    position: absolute;
-    top: 50%;
-    left: 25%;
-    margin-top: -5px;
-}
-
-#right {
-    position: absolute;
-    top: 50%;
-    right: 25%;
-    margin-top: -5px;
-}
-
-.finger {
-    position: absolute;
-    height: 10px;
-    width: 5px;
-    background-color: var(--robot-grey);
-}
-
-#leftarm {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 30px;
-    width: 25px;
-}
-
-#leftarm .finger:nth-of-type(1) {
-    animation: 2s lefttopfinger linear infinite;
-}
-
-#leftarm .finger:nth-of-type(2) {
-    animation: 2s leftbotfinger linear infinite;
-}
-
-#rightarm {
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 30px;
-    width: 25px;
-}
-
-#rightarm .finger:nth-of-type(1) {
-    animation: 2s righttopfinger linear infinite;
-}
-
-#rightarm .finger:nth-of-type(2) {
-    animation: 2s rightbotfinger linear infinite;
-}
-
-#neck {
-    position: absolute;
-    top: 30px;
-    width: 40px;
-    height: 3px;
-    background-color: var(--robot-dark);
-    left: 50%;
-    transform: translateX(-50%);
-    animation: 2s neckMotion linear infinite;
-}
-
-#body {
-    position: absolute;
-    top: 33px;
-    width: 50px;
-    height: 10px;
-    background-color: var(--robot-grey);
-    left: 50%;
-    transform: translateX(-50%);
-    animation: 2s bodyMotion linear infinite;
-}
-
-#legs {
-    position: absolute;
-    top: 33px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.foot {
-    width: 25px;
-    height: 10px;
-    background-color: var(--robot-grey);
-}
-
-#legs #left {
-    position: absolute;
-    top: 0;
-    left: -25px;
-    animation: 2s leftfoot linear infinite;
-}
-
-#legs #right {
-    position: absolute;
-    top: 0;
-    right: -25px;
-    animation: 2s rightfoot linear infinite;
-}
-
-/* Robot Animations */
-@keyframes lefttopfinger {
-    0% { left: 0; top: 5px; }
-    30% { left: -10px; top: 2px; }
-    60% { left: -10px; top: 5px; }
-    100% { left: 0; top: 5px; }
-}
-
-@keyframes leftbotfinger {
-    0% { left: 0; bottom: 5px; }
-    30% { left: -10px; bottom: 2px; }
-    60% { left: -10px; bottom: 5px; }
-    100% { left: 0; bottom: 5px; }
-}
-
-@keyframes righttopfinger {
-    0% { right: 0; top: 5px; }
-    30% { right: -10px; top: 2px; }
-    60% { right: -10px; top: 5px; }
-    100% { right: 0; top: 5px; }
-}
-
-@keyframes rightbotfinger {
-    0% { right: 0; bottom: 5px; }
-    30% { right: -10px; bottom: 2px; }
-    60% { right: -10px; bottom: 5px; }
-    100% { right: 0; bottom: 5px; }
-}
-
-@keyframes leftfoot {
-    0% { top: 0; }
-    30% { top: 12px; }
-    60% { top: 0; }
-    100% { top: 0; }
-}
-
-@keyframes rightfoot {
-    0% { top: 0; }
-    30% { top: 0; }
-    60% { top: 12px; }
-    100% { top: 0; }
-}
-
-@keyframes botMotion {
-    0% { top: 0; }
-    30% { top: -13px; }
-    60% { top: -13px; }
-    100% { top: 0; }
-}
-
-@keyframes neckMotion {
-    0% { top: 30px; }
-    30% { top: 17px; }
-    60% { top: 17px; }
-    100% { top: 30px; }
-}
-
-@keyframes bodyMotion {
-    0% { top: 33px; }
-    30% { top: 20px; }
-    60% { top: 20px; }
-    100% { top: 33px; }
-}
-
-@keyframes eyeBlink {
-    0% { background-color: var(--robot-blue); }
-    15% { background-color: var(--robot-dark); }
-    30% { background-color: var(--robot-blue); }
-    85% { background-color: var(--robot-dark); }
-    100% { background-color: var(--robot-blue); }
+.file_submit:hover {
+    background-color: white;
+    color: #55acee;
 }
 
 /* Button Container */
@@ -708,6 +504,8 @@ option{
     transition: all 0.3s ease;
     letter-spacing: 2px;
     text-transform: uppercase;
+    margin: 20px auto; /* Add margin to separate from content */
+    display: block; /* Center the button */
 }
 
 .send-grader-btn:hover {
@@ -719,52 +517,6 @@ option{
 .send-grader-btn:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Modal Header and Copy Button Styles */
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.title-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.title-group h4 {
-    margin: 0;
-}
-
-.copy-button {
-    width: 32px;
-    height: 32px;
-    padding: 8px;
-    background-color: var(--accent-color);
-    color: var(--text-primary);
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-}
-
-.copy-button:hover {
-    background-color: var(--accent-hover);
-}
-
-.copy-button svg {
-    width: 16px;
-    height: 16px;
-}
-
-.copy-button.copied {
-    background-color: #2196F3;
 }
 
 /* Update the typing animation styles */
@@ -800,38 +552,22 @@ option{
     padding: 12px 30px;
 }
 
-/* Update overlay styles */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    z-index: 1000;
-    pointer-events: none;
-}
-
-.modal-overlay.show {
-    display: block;
-}
-
 /* Update the results state container */
 #results-state {
-    display: none;
-    width: 80%;
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0 20px;
-    overflow: hidden;
+    overflow-x: hidden;
+    flex: 1;
+    box-sizing: border-box;
 }
 
 /* Add download button styles */
 .download-btn {
     font-size: 18px;
     padding: 12px 30px;
-    background-color: var(--bg-tertiary);
+    background-color: #808080;
     color: var(--text-primary);
     border: none;
     border-radius: 4px;
@@ -839,10 +575,12 @@ option{
     transition: all 0.3s ease;
     letter-spacing: 2px;
     text-transform: uppercase;
+    margin: 20px auto;
+    display: block;
 }
 
 .download-btn:hover {
-    background-color: var(--table-header);
+    background-color: #666666;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
@@ -884,28 +622,17 @@ option{
 
 /* Initial state styles */
 #initial-state {
-    min-height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    padding: 20px 0;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
 }
 
 h1 {
     margin: 0;
     padding: 20px 0;
-}
-
-/* Loading states should be centered */
-#login-loading,
-#transcript-loading,
-#error-state {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
 }
 
 /* Timer styles */
@@ -962,29 +689,28 @@ h1 {
     gap: 15px;
     justify-content: center;
     align-items: center;
+    margin: 0;
 }
 
 /* Upload button styles */
 .upload-btn {
-    padding: 10px 20px;
+    padding: 12px 24px;
     font-size: 16px;
-    background-color: var(--bg-tertiary);
+    background-color: var(--accent-color);
     color: var(--text-primary);
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-transform: none;
+    letter-spacing: normal;
+    min-width: 150px;
 }
 
 .upload-btn:hover {
-    background-color: var(--table-header);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.upload-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: var(--accent-hover);
+    transform: none;
+    box-shadow: none;
 }
 
 /* Tooltip container */
@@ -1030,27 +756,6 @@ h1 {
     border-color: transparent var(--bg-secondary) transparent transparent;
 }
 
-/* Test data indicator styles */
-.test-data-container {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background-color: var(--bg-secondary);
-    padding: 12px 15px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    color: var(--text-secondary);
-    z-index: 1000;
-}
-
-.test-data-label {
-    color: var(--accent-color);
-    font-family: monospace;
-    font-size: 16px;
-    font-weight: 500;
-}
-
 /* Add these after the grade-dropdown styles */
 .grade-dropdown.failure-grade {
     background-color: rgba(255, 68, 68, 0.1); /* Slight red tint */
@@ -1063,4 +768,59 @@ h1 {
 .grade-dropdown.failure-grade option:first-child {
     color: #ff4444; /* Red color for placeholder */
     font-style: italic;
+}
+
+/* Navigation Bar Styles */
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px; /* Explicitly set height */
+    background-color: var(--bg-secondary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1002;
+    padding: 0 2rem; /* Changed from 1rem to account for height */
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+
+.nav-items {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+}
+
+.nav-item {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.nav-item:not(:last-child)::after {
+    content: '|';
+    color: var(--border-color);
+    margin: 0 0.5rem;
+    opacity: 0.5;
+    position: relative;
+    right: -1rem;
+}
+
+.nav-item:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--accent-color);
+}
+
+.nav-item.disabled {
+    color: var(--text-secondary);
+    cursor: not-allowed;
+    opacity: 0.7;
 }

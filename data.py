@@ -15,6 +15,34 @@ GRADES = grades_json["GRADES"]
 GRADE_SECONDARY_POS = grades_json["GRADE_SECONDARY_POS"]
 GRADE_SECONDARY_NEG = grades_json["GRADE_SECONDARY_NEG"]
 
+
+class TwoFactCode:
+    def __init__(self, code):
+        """Initialize with a code."""
+        self.code = code
+
+    def get_code(self):
+        """Return the stored code."""
+        return self.code
+    
+    def update_code(self, new_code):
+        self.code = new_code
+        with open("2fa_code.json", "w") as f:
+            json.dump({"code": self.code}, f)  # Save to a file
+
+class Customers:
+    def __init__(self, phone_nums):
+        self.phone_nums = phone_nums
+
+    def set_phone_nums(self, phone_nums):
+        self.phone_nums = phone_nums
+
+    def get_len_phone_nums(self):
+        return len(self.phone_nums)
+    
+    def get_phone_nums(self):
+        return self.phone_nums
+
 # try enviornment variables (replit, render, railway, etc)
 try:
     USERNAME = os.environ.get("USERNAME")
@@ -86,11 +114,11 @@ def load_customer_data(path: str):
     customer_names = get_customer_names(charged_leads)
     return customer_names
 
-if __name__ == '__main__':
-    charged_leads = load_charged_leads('sample_data/leads-inbox.csv')
+# if __name__ == '__main__':
+#     charged_leads = load_charged_leads('sample_data/leads-inbox.csv')
     
-    # get customer names
-    customer_names = get_customer_names(charged_leads)
-    print("\nAll customer names:")
-    print(customer_names)
-    print(len(customer_names))
+#     # get customer names
+#     customer_names = get_customer_names(charged_leads)
+#     print("\nAll customer names:")
+#     print(customer_names)
+#     print(len(customer_names))

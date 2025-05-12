@@ -1,1055 +1,187 @@
+<!DOCTYPE html>
 <html>
     <head>
-        <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="../static/index.css">
         <title>Google LSA Grading</title>
     </head>
 
     <body>
+        <!-- Top Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-items">
+                <a href="/home" class="nav-item">Home</a>
+                <a href="/transcripts" class="nav-item">Fetched Transcripts</a>
+                <a href="#" class="nav-item disabled">Graded Transcripts</a>
+            </div>
+        </nav>
+
         <div id="main-content">
-        <br><br>
-        <h1><center>Google LSA Grading</center></h1>
-        
-        <!-- Initial state -->
-        <div id="initial-state">
+            <h1><center>Google LSA Grading</center></h1>
+            
+            <!-- Initial state -->
+            <div id="initial-state">
                 <center>
                     <div class="button-group">
                         <input type="file" id="csvFileInput" accept=".csv" style="display: none">
                         <button onclick="document.getElementById('csvFileInput').click()" class="upload-btn">Upload CSV</button>
-                        <div class="tooltip-container">
-                            <button onclick="startGrading()" class="action-button" id="run-grader-btn">Run Grader</button>
-                            <div class="tooltip" id="grader-tooltip"></div>
-                        </div>
                     </div>
                 </center>
-        </div>
-
-        <!-- Login loading state -->
-        <div id="login-loading" class="loading-state" style="display: none;">
-            <center>
-                    <h3><span id="login-message" class="typing-animation">Hold on, let's get you logged into Podium...</span></h3>
-                <div id="two_factor_form" class="form-container">
-                    <input type="text" id="two_factor_code" placeholder="enter code (ex. 123456)">
-                    <button onclick="submit_two_factor()" class="action-button">Submit</button>
-                </div>
-            </center>
-        </div>
-
-        <!-- Transcript loading state -->
-        <div id="transcript-loading" class="loading-state" style="display: none;">
-            <center>
-                    <h3><span id="loading-message" class="typing-animation">Let's fetch those transcripts...</span></h3>
-                <div id="container">
-                    <div id="bot">
-                        <div id="eyes">
-                            <div id="left"><div class="eye"></div></div>
-                            <div id="right"><div class="eye"></div></div>
-                        </div>
-                        <div id="leftarm">
-                            <div class="finger"></div>
-                            <div class="finger"></div>
-                        </div>
-                        <div id="rightarm">
-                            <div class="finger"></div>
-                            <div class="finger"></div>
-                        </div>
-                    </div>
-                    <div id="neck"></div>
-                    <div id="body"></div>
-                    <div id="legs">
-                        <div id="left"><div class="foot"></div></div>
-                        <div id="right"><div class="foot"></div></div>
-                    </div>
-                </div>
-            </center>
-        </div>
-        
-        <!-- Results state -->
-        <center>
-            <div id="results-state" style="display: none;">
-                <div id="output">
-                    <table id="results-table">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Grade</th>
-                                <th>Secondary Grade</th>
-                                <th>Transcript</th>
-                            </tr>
-                        </thead>
-                        <tbody id="results-body"></tbody>
-                    </table>
-                    <div class="button-container">
-                        <button class="download-btn" onclick="downloadCSV()">Download</button>
-                        <button class="action-button send-grader-btn">Send to Grader</button>
-                    </div>
-                    <div class="button-container">
-                        <button onclick="resetAndGradeAgain()" class="grade-again-btn small">Grade Again</button>
-                    </div>
-                </div>
-                <div class="timer-container">
-                    <div class="timer-row">
-                        <span class="timer-label">Fetching:</span>
-                        <span id="fetch-timer">00:00</span>
-                    </div>
-                    <div class="timer-row">
-                        <span class="timer-label">Grading:</span>
-                        <span id="grade-timer">00:00</span>
-                    </div>
-                    <div class="timer-row total">
-                        <span class="timer-label">Total:</span>
-                        <span id="total-timer">00:00</span>
-                    </div>
-                </div>
             </div>
-        </center>
 
-        <!-- Test data indicator -->
-        <div class="test-data-container" style="display: none;">
-            <span class="test-data-label">Using Test Data</span>
-        </div>
+        <!-- Load loading states -->
+        <iframe id="loading-frame" src="/loading" style="display: none; border: none; width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000;"></iframe>
 
-        <!-- Add this new error state div after the other states -->
-        <div id="error-state" class="loading-state" style="display: none;">
-            <center>
-                <h3>Whoops! Something failed...</h3>
-                <button onclick="backToMain()" class="action-button">Back to Main</button>
-        </center>
-        </div>
-    </div>
-    
-    <!-- Add the overlay div right before the modal -->
-    <div class="modal-overlay"></div>
+        <script>
+            // Constants
+            const initialState = document.getElementById('initial-state');
+            const loadingFrame = document.getElementById('loading-frame');
+            const resultsState = document.getElementById('results-state');
+            const modal = document.getElementById('transcriptModal');
+            const modalOverlay = document.querySelector('.modal-overlay');
+            const closeBtn = document.querySelector('.close');
+            const transcriptText = document.getElementById('transcriptText');
+            const testDataIndicator = document.querySelector('.test-data-container');
 
-    <!-- Modal for transcript -->
-    <div id="transcriptModal" class="modal">
-        <div class="modal-content">
-            <button class="close" title="Close transcript">&times;</button>
-            <div class="modal-header">
-                <div class="title-group">
-                    <h4></h4>
-                    <button onclick="copyTranscript()" class="copy-button" title="Copy to clipboard">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2z"/>
-                            <path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <pre id="transcriptText"></pre>
-        </div>
-    </div>
-</body>
-
-<script>
-    // Get modal elements
-    const modal = document.getElementById("transcriptModal");
-    const modalOverlay = document.querySelector(".modal-overlay");
-    const closeBtn = document.querySelector(".close");
-    const transcriptText = document.getElementById("transcriptText");
-
-    // State elements
-    const initialState = document.getElementById("initial-state");
-    const loginLoading = document.getElementById("login-loading");
-    const transcriptLoading = document.getElementById("transcript-loading");
-    const resultsState = document.getElementById("results-state");
-    const errorState = document.getElementById("error-state");
-
-    // Initialize grade options
-    let gradeOptions = [];
-    let gradeSecondaryOptions = {
-        positive: [],
-        negative: []
-    };
-
-    // Load options from server when page loads
-    fetch('/options')
-        .then(response => response.json())
-        .then(data => {
-            gradeOptions = data.GRADES;
-            gradeSecondaryOptions.positive = data.GRADE_SECONDARY_POS;
-            gradeSecondaryOptions.negative = data.GRADE_SECONDARY_NEG;
-        })
-        .catch(error => console.error('Error loading options:', error));
-
-    // Update timer variables
-    let fetchStartTime;
-    let gradeStartTime;
-    let fetchTimerInterval;
-    let gradeTimerInterval;
-    let fetchDuration = 0;
-    let gradeDuration = 0;
-
-    // Function to format time
-    function formatTime(ms) {
-        const seconds = Math.floor(ms / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
-
-    // Function to update specific timer
-    function updateTimer(timerId, startTime) {
-        const timerDisplay = document.getElementById(timerId);
-        const elapsedTime = Date.now() - startTime;
-        timerDisplay.textContent = formatTime(elapsedTime);
-        
-        // Update durations and total time
-        if (timerId === 'fetch-timer') {
-            fetchDuration = elapsedTime;
-        } else if (timerId === 'grade-timer') {
-            gradeDuration = elapsedTime;
-        }
-        
-        // Update total time
-        const totalDisplay = document.getElementById('total-timer');
-        totalDisplay.textContent = formatTime(fetchDuration + gradeDuration);
-    }
-
-    // Start fetch timer
-    function startFetchTimer() {
-        fetchStartTime = Date.now();
-        fetchTimerInterval = setInterval(() => updateTimer('fetch-timer', fetchStartTime), 1000);
-    }
-
-    // Start grade timer
-    function startGradeTimer() {
-        gradeStartTime = Date.now();
-        gradeTimerInterval = setInterval(() => updateTimer('grade-timer', gradeStartTime), 1000);
-    }
-
-    // Stop specific timer
-    function stopTimer(intervalId) {
-        clearInterval(intervalId);
-    }
-
-    function showState(stateElement) {
-        // Hide all states
-        initialState.style.display = "none";
-        loginLoading.style.display = "none";
-        transcriptLoading.style.display = "none";
-        resultsState.style.display = "none";
-        errorState.style.display = "none";
-        
-        // Show the requested state
-        if (stateElement) {
-            stateElement.style.display = "block";
-            
-            // Reset animations for the new state
-            const typingElement = stateElement.querySelector('.typing-animation');
-            if (typingElement) {
-                typingElement.classList.remove('typing-animation');
-                void typingElement.offsetWidth; // Trigger reflow
-                typingElement.classList.add('typing-animation');
+            // State management functions
+            function showState(stateElement) {
+                // Hide initial state
+                initialState.style.display = "none";
+                
+                // Show loading frame
+                if (stateElement === 'loading') {
+                    loadingFrame.style.display = "block";
+                }
             }
-            
-            // If we're showing the transcript loading state, make sure the robot animation is visible
-            if (stateElement === transcriptLoading) {
-                document.getElementById('container').style.display = 'block';
-            }
-        }
-    }
 
-    function showTranscript(transcript, phoneNumber) {
-        transcriptText.textContent = transcript;
-        const isFailure = transcript.trim().startsWith('FAILED');
-        document.querySelector('.title-group h4').textContent = `${phoneNumber} - ${isFailure ? 'Failed' : 'Latest Call'}`;
+            // Handle CSV file upload
+            const csvFileInput = document.getElementById('csvFileInput');
+            csvFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) {
+                    console.error('No file selected');
+                    return;
+                }
 
-        modal.classList.add('show');
-        modalOverlay.classList.add('show');
-        document.getElementById('main-content').classList.add('shift');
-    }
+                const formData = new FormData();
+                formData.append('file', file);
 
-    function closeTranscript() {
-        modal.classList.remove('show');
-        modalOverlay.classList.remove('show');
-        document.getElementById('main-content').classList.remove('shift');
-    }
+                console.log('Uploading CSV file...', file.name);
 
-    // Close modal when clicking the X
-    closeBtn.onclick = closeTranscript;
+                // First upload the CSV
+                fetch('/upload-csv', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Upload response:', data);
+                    if (data.success) {
+                        showState('loading');
+                        return fetch('/run-script', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                    } else {
+                        throw new Error(data.error || 'Failed to upload CSV');
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Run script response:', data);
+                    if (data.needs_2fa) {
+                        loadingFrame.contentWindow.postMessage('show_2fa', '*');
+                    }
+                })
+                .catch(error => {
+                    console.error('Upload/Run Error:', error);
+                    loadingFrame.contentWindow.postMessage('show_error', '*');
+                });
+            });
 
-    // Close modal only when clicking directly on the overlay
-    modalOverlay.onclick = function(event) {
-        // Only close if clicking directly on the overlay
-        if (event.target === modalOverlay) {
-            closeTranscript();
-        }
-    };
-
-    // Prevent clicks inside the main content from closing the modal
-    document.getElementById('main-content').onclick = function(event) {
-        // Don't close if clicking on or inside dropdowns
-        if (event.target.closest('.grade-dropdown')) {
-            event.stopPropagation();
-        }
-    };
-
-    // Modify startGrading function
-    function startGrading() {
-        showState(loginLoading);
-        fetch('/run-script', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.needs_2fa) {
-                    showState(transcriptLoading);
-                    
-                    // Reset and ensure the loading message shows the fetching phase
-                    const loadingMessage = document.getElementById('loading-message');
-                    loadingMessage.classList.remove('typing-animation');
-                    loadingMessage.textContent = "Let's fetch those transcripts...";
-                    void loadingMessage.offsetWidth;
-                    loadingMessage.classList.add('typing-animation');
-                    
-                    // Start fetch timer after 2FA
-                    startFetchTimer();
-                    
-                    // For test data, directly make the two-phase calls
+            // Listen for messages from the loading frame
+            window.addEventListener('message', function(event) {
+                if (event.data === 'back_to_main') {
+                    loadingFrame.style.display = "none";
+                    initialState.style.display = "block";
+                } else if (event.data.type === '2fa_submit') {
+                    // Handle 2FA code submission
                     fetch('/submit-2fa', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({})
+                        body: JSON.stringify({ code: event.data.code })
                     })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.status === "fetch_complete") {
-                            // Stop fetch timer when transcripts are received
-                            stopTimer(fetchTimerInterval);
-                            fetchDuration = Date.now() - fetchStartTime;
-                            document.getElementById('fetch-timer').textContent = formatTime(fetchDuration);
-                            
-                            // Make sure we're showing the transcript loading state
-                            showState(transcriptLoading);
-                            
-                            // Update loading message to show that grading will begin
-                            loadingMessage.classList.remove('typing-animation');
-                            // Count failed and non-failed transcripts
-                            const workableTranscripts = data.transcripts.filter(t => !t.startsWith('FAILED')).length;
-                            const failedTranscripts = data.transcripts.filter(t => t.startsWith('FAILED')).length;
-                            loadingMessage.textContent = "Now, let's grade those transcripts...";
-                            void loadingMessage.offsetWidth;
-                            loadingMessage.classList.add('typing-animation');
-                            
-                            // If there are failed transcripts, show the additional message
-                            if (failedTranscripts > 0) {
-                                const failedMessage = document.createElement('div');
-                                failedMessage.style.fontSize = '14px';
-                                failedMessage.style.marginTop = '10px';
-                                failedMessage.style.color = 'var(--text-secondary)';
-                                failedMessage.textContent = `Skipping failed transcripts: ${failedTranscripts}`;
-                                loadingMessage.parentNode.insertBefore(failedMessage, loadingMessage.nextSibling);
-                            }
-                            
-                            // Start grading timer
-                            startGradeTimer();
-
-                            // Track the current iteration
-                            let currentIteration = 0;
-
-                            // Start listening for progress updates
-                            const progressSource = new EventSource('/grade-progress');
-                            progressSource.onmessage = function(event) {
-                                currentIteration++;
-                                loadingMessage.textContent = `Now, let's grade those transcripts... (${currentIteration}/${workableTranscripts})`;
-                                if (currentIteration >= workableTranscripts) {
-                                    progressSource.close();
-                                }
-                            };
-
-                            // Now send another request for the grading phase
-                            fetch('/submit-2fa', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ 
-                                    phase: 'grade',
-                                    transcripts: data.transcripts
-                                })
-                            })
-                            .then(response => response.json())
-                            .then(gradeData => {
-                                // When grading is complete, stop the grade timer
-                                stopTimer(gradeTimerInterval);
-                                gradeDuration = Date.now() - gradeStartTime;
-                                document.getElementById('grade-timer').textContent = formatTime(gradeDuration);
-                                document.getElementById('total-timer').textContent = formatTime(fetchDuration + gradeDuration);
-                                
-                                // Show/hide test data indicator
-                                const testDataContainer = document.querySelector('.test-data-container');
-                                if (gradeData.use_test_data) {
-                                    testDataContainer.style.display = 'block';
-                                } else {
-                                    testDataContainer.style.display = 'none';
-                                }
-                                
-                                // First populate the table with data
-                                updateTableWithGrades(gradeData);
-                                
-                                // Then show the results after table is updated
-                                showState(resultsState);
-                            })
-                            .catch(error => {
-                                console.error('Grading error:', error);
-                                showState(errorState);
-                            });
+                        if (data.success) {
+                            loadingFrame.contentWindow.postMessage('start_grading', '*');
                         } else {
-                            // Use updateTable to populate the table
-                            updateTable(data);
-                            
-                            // Then show the results - moved to the animationend event handler in updateTable
+                            loadingFrame.contentWindow.postMessage('show_error', '*');
                         }
                     })
-                    .catch(error => {
-                        console.error("Error:", error);
-                        showState(errorState);
+                    .catch(() => {
+                        loadingFrame.contentWindow.postMessage('show_error', '*');
                     });
                 }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                showState(errorState);
             });
-    }
 
-    // Modify updateTable function to align with the new approach and ensure proper state transitions
-    function updateTable(data) {
-        const tbody = document.getElementById("results-body");
-        if (!tbody) {
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        
-        // When starting to grade, ensure fetch timer is stopped and store its final duration
-        stopTimer(fetchTimerInterval);
-        fetchDuration = Date.now() - fetchStartTime;
-        document.getElementById('fetch-timer').textContent = formatTime(fetchDuration);
-        
-        // Ensure we're in the transcriptLoading state for proper transition
-        showState(transcriptLoading);
-        
-        // Update loading message for the grading phase
-        const loadingMessage = document.getElementById('loading-message');
-        loadingMessage.classList.remove('typing-animation');
-        loadingMessage.textContent = "Now, let's grade those transcripts...";
-        void loadingMessage.offsetWidth;
-        loadingMessage.classList.add('typing-animation');
-        
-        // Now start the grade timer
-        startGradeTimer();
-        
-        try {
-            // Create and populate the table immediately
-            data.output.forEach(result => {
-                const row = document.createElement('tr');
-                const gradeDropdown = document.createElement('select');
-                gradeDropdown.className = 'grade-dropdown';
-                
-                // Add placeholder option if it's a failed transcript
-                if (result.transcript.trim().startsWith('FAILED')) {
-                    const placeholderOption = document.createElement('option');
-                    placeholderOption.value = "";
-                    placeholderOption.textContent = "Select Grade";
-                    placeholderOption.selected = true;
-                    placeholderOption.disabled = true;
-                    gradeDropdown.appendChild(placeholderOption);
-                    gradeDropdown.classList.add('failure-grade'); // Add this class for styling
+            // Initialize page
+            document.addEventListener('DOMContentLoaded', () => {
+                // Check for results in sessionStorage first
+                const storedResults = sessionStorage.getItem('grading_results');
+                if (storedResults) {
+                    try {
+                        const resultsData = JSON.parse(storedResults);
+                        initialState.style.display = 'none';
+                        resultsState.style.display = 'block';
+                        showResults(resultsData);
+                        // Clear the results from sessionStorage after displaying
+                        sessionStorage.removeItem('grading_results');
+                    } catch (error) {
+                        console.error('Error parsing stored results:', error);
+                        // Show initial state if there's an error
+                        initialState.style.display = 'block';
+                        resultsState.style.display = 'none';
+                    }
+                } else {
+                    // No stored results, show initial state
+                    initialState.style.display = 'block';
+                    resultsState.style.display = 'none';
                 }
-                
-                gradeOptions.forEach(option => {
-                    const optionElement = document.createElement('option');
-                    optionElement.value = option;
-                    optionElement.textContent = option;
-                    if (option === result.grade && !result.transcript.trim().startsWith('FAILED')) {
-                        optionElement.selected = true;
-                    }
-                    gradeDropdown.appendChild(optionElement);
-                });
-                
-                // Add change event listener
-                gradeDropdown.addEventListener('change', function() {
-                    // Remove failure-grade class if a value is selected
-                    if (this.value) {
-                        this.classList.remove('failure-grade');
-                    } else {
-                        this.classList.add('failure-grade');
-                    }
-                    handleGradeChange(this);
-                });
-                
-                row.innerHTML = `
-                    <td>${result.phone_number || 'N/A'}</td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <button class="view-transcript-btn ${result.transcript.trim().startsWith('FAILED') ? 'failure' : ''}" 
-                                data-transcript="${encodeURIComponent(result.transcript || '')}"
-                                onclick="showTranscript(\`${result.transcript.replace(/`/g, '\\`') || ''}\`, \`${result.phone_number || 'N/A'}\`)">
-                            View Transcript
-                        </button>
-                    </td>
-                `;
-                
-                row.cells[1].appendChild(gradeDropdown);
-                tbody.appendChild(row);
-                
-                // Initialize secondary grade
-                handleGradeChange(gradeDropdown);
-                
-                // If we have test data and a successful transcript, set the secondary grade
-                if (data.use_test_data && !result.transcript.trim().startsWith('FAILED') && result.grade_secondary) {
-                    const secondaryDropdown = row.cells[2].querySelector('.grade-dropdown');
-                    if (secondaryDropdown) {
-                        // Find and select the matching option
-                        const option = Array.from(secondaryDropdown.options).find(opt => opt.value === result.grade_secondary);
-                        if (option) {
-                            option.selected = true;
-                            secondaryDropdown.classList.remove('failure-grade');
-                        } else if (result.grade_secondary === 'Other') {
-                            // Handle custom "Other" value
-                            const otherOption = secondaryDropdown.querySelector('option[value="Other"]');
-                            if (otherOption) {
-                                otherOption.value = result.grade_secondary;
-                                otherOption.textContent = result.grade_secondary;
-                                otherOption.selected = true;
-                                secondaryDropdown.classList.remove('failure-grade');
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // After animation completes, only update the timers but don't show results yet
-            loadingMessage.addEventListener('animationend', function() {
-                // When finishing grading, stop the grade timer
-                stopTimer(gradeTimerInterval);
-                gradeDuration = Date.now() - gradeStartTime;
-                document.getElementById('grade-timer').textContent = formatTime(gradeDuration);
-                document.getElementById('total-timer').textContent = formatTime(fetchDuration + gradeDuration);
-                
-                // Don't show results state from here - it will be shown by the calling function
-                // showState(resultsState); <-- This was causing double display
-            }, { once: true });
-            
-        } catch (error) {
-            console.error("Error updating table:", error);
-            showState(errorState);
-        }
-    }
 
-    function backToMain() {
-        showState(initialState);
-    }
-
-    // Modify submit_two_factor function
-    function submit_two_factor() {
-        const code = document.getElementById("two_factor_code").value;
-        showState(transcriptLoading);
-        
-        // Reset and ensure the loading message shows the fetching phase
-        const loadingMessage = document.getElementById('loading-message');
-        loadingMessage.classList.remove('typing-animation');
-        loadingMessage.textContent = "Let's fetch those transcripts...";
-        void loadingMessage.offsetWidth;
-        loadingMessage.classList.add('typing-animation');
-        
-        // Start fetch timer after 2FA submission
-        startFetchTimer();
-
-        // Start listening for fetch progress updates
-        const fetchProgressSource = new EventSource('/fetch-progress');
-        
-        fetchProgressSource.onmessage = function(event) {
-            if (event.data.trim()) {  // Only process non-empty progress updates
-                loadingMessage.textContent = `Let's fetch those transcripts... (${event.data})`;
-            }
-        };
-
-        fetch('/submit-2fa', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ code: code })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Server error');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Close fetch progress event source
-            fetchProgressSource.close();
-            
-            if (data.error) {
-                showState(errorState);
-                return;
-            }
-            
-            // Handle the fetch complete status (new approach)
-            if (data.status === "fetch_complete") {
-                // Stop fetch timer when transcripts are received
-                stopTimer(fetchTimerInterval);
-                fetchDuration = Date.now() - fetchStartTime;
-                document.getElementById('fetch-timer').textContent = formatTime(fetchDuration);
-                
-                // Make sure we're showing the transcript loading state
-                showState(transcriptLoading);
-                
-                // Update loading message to show that grading will begin
-                loadingMessage.classList.remove('typing-animation');
-                // Count failed and non-failed transcripts
-                const workableTranscripts = data.transcripts.filter(t => !t.startsWith('FAILED')).length;
-                const failedTranscripts = data.transcripts.filter(t => t.startsWith('FAILED')).length;
-                loadingMessage.textContent = "Now, let's grade those transcripts...";
-                void loadingMessage.offsetWidth;
-                loadingMessage.classList.add('typing-animation');
-                
-                // If there are failed transcripts, show the additional message
-                if (failedTranscripts > 0) {
-                    const failedMessage = document.createElement('div');
-                    failedMessage.style.fontSize = '14px';
-                    failedMessage.style.marginTop = '10px';
-                    failedMessage.style.color = 'var(--text-secondary)';
-                    failedMessage.textContent = `Skipping failed transcripts: ${failedTranscripts}`;
-                    loadingMessage.parentNode.insertBefore(failedMessage, loadingMessage.nextSibling);
-                }
-                
-                // Start grading timer
-                startGradeTimer();
-
-                // Track the current iteration
-                let currentIteration = 0;
-
-                // Start listening for progress updates
-                const progressSource = new EventSource('/grade-progress');
-                progressSource.onmessage = function(event) {
-                    currentIteration++;
-                    loadingMessage.textContent = `Now, let's grade those transcripts... (${currentIteration}/${workableTranscripts})`;
-                    if (currentIteration >= workableTranscripts) {
-                        progressSource.close();
-                    }
-                };
-
-                // Now send another request for the grading phase
-                fetch('/submit-2fa', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        phase: 'grade',
-                        transcripts: data.transcripts
+                // Load grade options
+                fetch('/options')
+                    .then(response => response.json())
+                    .then(options => {
+                        window.gradeOptions = options;
                     })
-                })
-                .then(response => response.json())
-                .then(gradeData => {
-                    // When grading is complete, stop the grade timer
-                    stopTimer(gradeTimerInterval);
-                    gradeDuration = Date.now() - gradeStartTime;
-                    document.getElementById('grade-timer').textContent = formatTime(gradeDuration);
-                    document.getElementById('total-timer').textContent = formatTime(fetchDuration + gradeDuration);
-                    
-                    // Show/hide test data indicator
-                    const testDataContainer = document.querySelector('.test-data-container');
-                    if (gradeData.use_test_data) {
-                        testDataContainer.style.display = 'block';
-                    } else {
-                        testDataContainer.style.display = 'none';
-                    }
-                    
-                    // First populate the table with data
-                    updateTableWithGrades(gradeData);
-                    
-                    // Then show the results after table is updated
-                    showState(resultsState);
-                })
-                .catch(error => {
-                    console.error('Grading error:', error);
-                    showState(errorState);
-                });
-            } else if (data.output && Array.isArray(data.output)) {
-                // Handle the old approach (full response with output)
-                // Show/hide test data indicator based on server response
-                const testDataContainer = document.querySelector('.test-data-container');
-                if (data.use_test_data) {
-                    testDataContainer.style.display = 'block';
-                } else {
-                    testDataContainer.style.display = 'none';
-                }
+                    .catch(error => console.error('Error loading options:', error));
+
+                // Set up event listeners
+                document.querySelector('.close')?.addEventListener('click', closeTranscript);
+            });
+
+            // Helper function to get previous month and year
+            function getPreviousMonthYear() {
+                const date = new Date();
+                date.setMonth(date.getMonth() - 1);
                 
-                // Use updateTable to populate the table
-                updateTable(data);
+                const months = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
                 
-                // Then show the results - moved to the animationend event handler in updateTable
-            } else {
-                showState(errorState);
+                return `${months[date.getMonth()]} ${date.getFullYear()}`;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showState(errorState);
-        });
-    }
-
-    // New function to update table with grades - make sure it doesn't call showState again
-    function updateTableWithGrades(data) {
-        const tbody = document.getElementById("results-body");
-        if (!tbody) {
-            return;
-        }
-        
-        try {
-            // Make sure the table is cleared before populating
-            tbody.innerHTML = '';
-            
-            // Create and populate the table with graded data
-            data.output.forEach(result => {
-                const row = document.createElement('tr');
-                const gradeDropdown = document.createElement('select');
-                gradeDropdown.className = 'grade-dropdown';
-                
-                // Add placeholder option if it's a failed transcript
-                if (result.transcript.trim().startsWith('FAILED')) {
-                    const placeholderOption = document.createElement('option');
-                    placeholderOption.value = "";
-                    placeholderOption.textContent = "Select Grade";
-                    placeholderOption.selected = true;
-                    placeholderOption.disabled = true;
-                    gradeDropdown.appendChild(placeholderOption);
-                    gradeDropdown.classList.add('failure-grade'); // Add this class for styling
-                }
-                
-                gradeOptions.forEach(option => {
-                    const optionElement = document.createElement('option');
-                    optionElement.value = option;
-                    optionElement.textContent = option;
-                    if (option === result.grade && !result.transcript.trim().startsWith('FAILED')) {
-                        optionElement.selected = true;
-                    }
-                    gradeDropdown.appendChild(optionElement);
-                });
-                
-                // Add change event listener
-                gradeDropdown.addEventListener('change', function() {
-                    // Remove failure-grade class if a value is selected
-                    if (this.value) {
-                        this.classList.remove('failure-grade');
-                    } else {
-                        this.classList.add('failure-grade');
-                    }
-                    handleGradeChange(this);
-                });
-                
-                row.innerHTML = `
-                    <td>${result.phone_number || 'N/A'}</td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <button class="view-transcript-btn ${result.transcript.trim().startsWith('FAILED') ? 'failure' : ''}" 
-                                data-transcript="${encodeURIComponent(result.transcript || '')}"
-                                onclick="showTranscript(\`${result.transcript.replace(/`/g, '\\`') || ''}\`, \`${result.phone_number || 'N/A'}\`)">
-                            View Transcript
-                        </button>
-                    </td>
-                `;
-                
-                row.cells[1].appendChild(gradeDropdown);
-                tbody.appendChild(row);
-                
-                // Initialize secondary grade
-                handleGradeChange(gradeDropdown);
-                
-                // If we have test data and a successful transcript, set the secondary grade
-                if (data.use_test_data && !result.transcript.trim().startsWith('FAILED') && result.grade_secondary) {
-                    const secondaryDropdown = row.cells[2].querySelector('.grade-dropdown');
-                    if (secondaryDropdown) {
-                        // Find and select the matching option
-                        const option = Array.from(secondaryDropdown.options).find(opt => opt.value === result.grade_secondary);
-                        if (option) {
-                            option.selected = true;
-                            secondaryDropdown.classList.remove('failure-grade');
-                        } else if (result.grade_secondary === 'Other') {
-                            // Handle custom "Other" value
-                            const otherOption = secondaryDropdown.querySelector('option[value="Other"]');
-                            if (otherOption) {
-                                otherOption.value = result.grade_secondary;
-                                otherOption.textContent = result.grade_secondary;
-                                otherOption.selected = true;
-                                secondaryDropdown.classList.remove('failure-grade');
-                            }
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error("Error updating table with grades:", error);
-        }
-    }
-
-    function copyTranscript() {
-        const transcriptText = document.getElementById("transcriptText").textContent;
-        const copyButton = document.querySelector('.copy-button');
-        
-        navigator.clipboard.writeText(transcriptText).then(() => {
-            // Visual feedback
-            copyButton.classList.add('copied');
-            setTimeout(() => {
-                copyButton.classList.remove('copied');
-            }, 1000);
-        }).catch(err => {
-            console.error('Failed to copy text: ', err);
-        });
-    }
-
-    function downloadCSV() {
-        const rows = document.querySelectorAll('#results-table tbody tr');
-        let csv = 'Customer,Grade,Grade Secondary,Transcript\n';
-        
-        rows.forEach(row => {
-            const customer = row.cells[0].textContent;
-            const grade = row.querySelector('.grade-dropdown').value;
-            const gradeSecondary = row.cells[2].querySelector('.grade-dropdown')?.value || '';
-            
-            // Extract transcript from the data attribute
-            let transcript = '';
-            try {
-                const transcriptBtn = row.querySelector('.view-transcript-btn');
-                if (transcriptBtn && transcriptBtn.dataset.transcript) {
-                    transcript = decodeURIComponent(transcriptBtn.dataset.transcript);
-                }
-            } catch (e) {
-                console.error('Error extracting transcript:', e);
-            }
-            
-            // Escape quotes for CSV format
-            transcript = transcript.replace(/"/g, '""');
-            
-            csv += `"${customer}","${grade}","${gradeSecondary}","${transcript}"\n`;
-        });
-        
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'grading_results.csv');
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    // Add this function to handle grade changes
-    function handleGradeChange(gradeDropdown) {
-        const row = gradeDropdown.closest('tr');
-        const secondaryCell = row.cells[2];
-        const selectedGrade = gradeDropdown.value;
-        
-        // Determine which options to show based on the selected grade
-        let options = [];
-        if (["Very satisfied", "Somewhat satisfied"].includes(selectedGrade)) {
-            options = gradeSecondaryOptions.positive;
-        } else if (["Somewhat dissatisfied", "Very dissatisfied"].includes(selectedGrade)) {
-            options = gradeSecondaryOptions.negative;
-        }
-        
-        // Create the secondary dropdown or clear the cell
-        if (options.length > 0) {
-            const currentValue = secondaryCell.querySelector('select')?.value || '';
-            const dropdown = document.createElement('select');
-            dropdown.className = 'grade-dropdown';
-            
-            // Add placeholder option for failed transcripts
-            if (row.querySelector('.view-transcript-btn').classList.contains('failure')) {
-                const placeholderOption = document.createElement('option');
-                placeholderOption.value = "";
-                placeholderOption.textContent = "Select Secondary Grade";
-                placeholderOption.selected = true;
-                placeholderOption.disabled = true;
-                dropdown.appendChild(placeholderOption);
-                dropdown.classList.add('failure-grade');
-            }
-            
-            options.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option;
-                optionElement.textContent = option;
-                if (option === currentValue && !row.querySelector('.view-transcript-btn').classList.contains('failure')) {
-                    optionElement.selected = true;
-                }
-                dropdown.appendChild(optionElement);
-            });
-            
-            // Add event listener for "Other" option
-            dropdown.addEventListener('change', function() {
-                // Remove failure-grade class if a value is selected
-                if (this.value) {
-                    this.classList.remove('failure-grade');
-                } else {
-                    this.classList.add('failure-grade');
-                }
-                
-                if (this.value === 'Other') {
-                    const customValue = prompt('Please enter custom grade secondary:');
-                    if (customValue) {
-                        const otherOption = this.querySelector('option[value="Other"]');
-                        otherOption.value = customValue;
-                        otherOption.textContent = customValue;
-                        this.classList.remove('failure-grade'); // Remove red background after custom value
-                    } else {
-                        this.value = this.querySelector('option:not([value="Other"])').value;
-                        if (!this.value) {
-                            this.classList.add('failure-grade'); // Add back red background if no value
-                        }
-                    }
-                }
-            });
-            
-            secondaryCell.innerHTML = '';
-            secondaryCell.appendChild(dropdown);
-        } else {
-            secondaryCell.innerHTML = '';
-        }
-    }
-
-    // Update the CSV upload handling to work with the two-phase approach
-    function handleCsvUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            // Show loading state
-            const uploadBtn = document.querySelector('.upload-btn');
-            const originalText = uploadBtn.textContent;
-            uploadBtn.textContent = 'Processing...';
-            uploadBtn.disabled = true;
-            
-            fetch('/upload-csv', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error('Upload error:', data.error);
-                    alert(`Upload failed: ${data.error}`);
-                    showState(errorState);
-                } else {
-                    console.log('Upload successful');
-                    
-                    // First show the login page (if 2FA is needed)
-                    if (data.needs_2fa) {
-                        showState(loginLoading);
-                        
-                        // Important: Call startGrading after successful upload to trigger the subprocess
-                        startGrading();
-                    }
-                    
-                    // Reset the file input
-                    document.getElementById('csvFileInput').value = '';
-                }
-            })
-            .catch(error => {
-                console.error('Upload error:', error);
-                alert('Upload failed. Please try again.');
-                showState(errorState);
-            })
-            .finally(() => {
-                // Reset button state
-                uploadBtn.textContent = originalText;
-                uploadBtn.disabled = false;
-            });
-        }
-    }
-
-    // Add event listener for CSV file input
-    document.getElementById('csvFileInput').addEventListener('change', handleCsvUpload);
-
-    // Add this function to get the previous month and year
-    function getPreviousMonthYear() {
-        const date = new Date();
-        // Go back one month
-        date.setMonth(date.getMonth() - 1);
-        
-        const months = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
-        
-        return `${months[date.getMonth()]} ${date.getFullYear()}`;
-    }
-
-    // Add this function to update the tooltip text
-    function updateTooltip() {
-        const tooltip = document.getElementById('grader-tooltip');
-        tooltip.textContent = `Grading ${getPreviousMonthYear()} Calls`;
-    }
-
-    // Call updateTooltip when the page loads
-    document.addEventListener('DOMContentLoaded', updateTooltip);
-
-    // Add this function to check test data status
-    function checkTestDataStatus() {
-        fetch('/check-test-data')
-            .then(response => response.json())
-            .then(data => {
-                const testDataContainer = document.querySelector('.test-data-container');
-                if (data.use_test_data) {
-                    testDataContainer.style.display = 'block';
-                } else {
-                    testDataContainer.style.display = 'none';
-                }
-            })
-            .catch(error => console.error('Error checking test data status:', error));
-    }
-
-    // Call checkTestDataStatus when the page loads
-    document.addEventListener('DOMContentLoaded', checkTestDataStatus);
-
-    // Add function to reset everything and go back to home
-    function resetAndGradeAgain() {
-        // Reset all timers
-        stopTimer(fetchTimerInterval);
-        stopTimer(gradeTimerInterval);
-        fetchDuration = 0;
-        gradeDuration = 0;
-        document.getElementById('fetch-timer').textContent = '00:00';
-        document.getElementById('grade-timer').textContent = '00:00';
-        document.getElementById('total-timer').textContent = '00:00';
-        
-        // Reset the customers instance on the server
-        fetch('/reset-customers', { method: 'POST' })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to reset customers');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log(data.message); // Log success message
-                // Reset file input if it exists
-                const fileInput = document.getElementById('csvFileInput');
-                if (fileInput) {
-                    fileInput.value = '';
-                }
-                
-                // Go back to initial state
-                showState(initialState);
-                
-                // Check test data status again
-                checkTestDataStatus();
-            })
-            .catch(error => {
-                console.error('Error resetting customers:', error);
-                showState(errorState);
-            });
-    }
-</script>
+        </script>
+    </body>
 </html>

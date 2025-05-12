@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="../static/index.css">
+        <link rel="stylesheet" type="text/css" href="../static/loading.css">
+        <title>Loading - Google LSA Grading</title>
+    </head>
+
+    <body>
+        <!-- Top Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-items">
+                <a href="/home" class="nav-item">Home</a>
+                <a href="/transcripts" class="nav-item">Fetched Transcripts</a>
+                <a href="#" class="nav-item disabled">Graded Transcripts</a>
+            </div>
+        </nav>
+
+        <div id="main-content">
+            <br><br>
+            <!-- Universal Loading State -->
+            <div class="loading-state">
+                <center>
+                    <h3><span id="status-message" class="typing-animation">Loading...</span></h3>
+                    
+                    <!-- 2FA Form (Hidden by default) -->
+                    <div id="two_factor_form" style="display: none;">
+                        <input type="text" id="two_factor_code" placeholder="enter code (ex. 123456)">
+                        <button onclick="submit_two_factor()" class="action-button">Submit</button>
+                    </div>
+
+                    <!-- Loading Animation -->
+                    <div id="container">
+                        <div id="bot">
+                            <div id="eyes">
+                                <div id="left"><div class="eye"></div></div>
+                                <div id="right"><div class="eye"></div></div>
+                            </div>
+                            <div id="leftarm">
+                                <div class="finger"></div>
+                                <div class="finger"></div>
+                            </div>
+                            <div id="rightarm">
+                                <div class="finger"></div>
+                                <div class="finger"></div>
+                            </div>
+                        </div>
+                        <div id="neck"></div>
+                        <div id="body"></div>
+                        <div id="legs">
+                            <div id="left"><div class="foot"></div></div>
+                            <div id="right"><div class="foot"></div></div>
+                        </div>
+                    </div>
+                </center>
+            </div>
+        </div>
+
+        <script>
+            const statusMessage = document.getElementById('status-message');
+            const twoFactorForm = document.getElementById('two_factor_form');
+            const container = document.getElementById('container');
+
+            // Event listeners for messages from parent
+            window.addEventListener('message', function(event) {
+                if (event.data === 'show_2fa') {
+                    statusMessage.textContent = "Hold on, let's get you logged into Podium...";
+                    twoFactorForm.style.display = 'block';
+                    container.style.display = 'none';
+                } else if (event.data === 'start_grading') {
+                    statusMessage.textContent = "Now, let's grade those transcripts...";
+                    twoFactorForm.style.display = 'none';
+                    container.style.display = 'block';
+                } else if (event.data === 'fetch_transcripts') {
+                    statusMessage.textContent = "Let's fetch those transcripts...";
+                    twoFactorForm.style.display = 'none';
+                    container.style.display = 'block';
+                }
+            });
+
+            function submit_two_factor() {
+                const code = document.getElementById('two_factor_code').value.trim();
+                if (code) {
+                    window.parent.postMessage({ type: '2fa_submit', code: code }, '*');
+                }
+            }
+        </script>
+    </body>
+</html> 

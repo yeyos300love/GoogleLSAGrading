@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="../static/index.css">
+        <link rel="stylesheet" type="text/css" href="../static/transcripts.css">
+        <title>Transcript Results</title>
+    </head>
+    <body>
+        <!-- Top Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-items">
+                <a href="/transcripts" class="nav-item">Back</a>
+                <a href="/home" class="nav-item">Home</a>
+                <a href="/transcripts" class="nav-item">Fetched Transcripts</a>
+                <a href="#" class="nav-item disabled">Graded Transcripts</a>
+            </div>
+        </nav>
+
+        <div id="main-content">
+            <h1><center>Transcript Results</center></h1>
+            
+            <center>
+                <div id="results-state">
+                    <div id="output">
+                        <table id="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Transcript</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-body">
+                                {% for transcript in transcripts %}
+                                <tr>
+                                    <td>{{ transcript.customer }}</td>
+                                    <td>
+                                        <button class="view-transcript-btn{% if transcript.transcript.startswith('FAILED') %} failure{% endif %}" 
+                                                data-transcript="{{ transcript.transcript|replace("'", "\\'")|replace("\n", "\\n")|replace("`", "\\`") }}"
+                                                data-customer="{{ transcript.customer }}"
+                                                onclick="showTranscript(this.dataset.transcript, this.dataset.customer)">
+                                            View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </center>
+
+            <!-- Run Sentiment Analysis Button -->
+            <button class="send-grader-btn">Run Sentiment Analysis</button>
+        </div>
+
+        <!-- Modal for transcript -->
+        <div id="transcriptModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="title-group">
+                        <h4></h4>
+                        <button class="copy-button" onclick="copyTranscript()" title="Copy transcript">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button class="close" title="Close transcript">&times;</button>
+                </div>
+                <div id="transcriptText"></div>
+            </div>
+        </div>
+
+        <script>
+            // Modal functionality
+            const modal = document.getElementById('transcriptModal');
+            const modalOverlay = document.querySelector('.modal-overlay');
+            const closeBtn = document.querySelector('.close');
+            const transcriptText = document.getElementById('transcriptText');
+
+            function showTranscript(transcript, phoneNumber) {
+                // Replace literal \n with actual newlines
+                const formattedTranscript = transcript.replace(/\\n/g, '\n');
+                transcriptText.textContent = formattedTranscript;
+                const isFailure = transcript.trim().startsWith('FAILED');
+                document.querySelector('.title-group h4').textContent = `${phoneNumber} - ${isFailure ? 'Failed' : 'Latest Call'}`;
+
+                modal.classList.add('show');
+                document.getElementById('main-content').classList.add('shift');
+            }
+
+            function closeTranscript() {
+                modal.classList.remove('show');
+                document.getElementById('main-content').classList.remove('shift');
+            }
+
+            // Close modal when clicking X button
+            document.querySelector('.close').addEventListener('click', closeTranscript);
+
+            function copyTranscript() {
+                const text = document.getElementById('transcriptText').textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    const copyButton = document.querySelector('.copy-button');
+                    copyButton.classList.add('copied');
+                    setTimeout(() => copyButton.classList.remove('copied'), 2000);
+                });
+            }
+
+            // Add click handler for Run Sentiment Analysis button
+            document.querySelector('.send-grader-btn').addEventListener('click', function() {
+                // Get all transcripts from the table
+                const transcripts = [];
+                document.querySelectorAll('#results-body tr').forEach(row => {
+                    const transcript = row.querySelector('.view-transcript-btn').dataset.transcript;
+                    const customer = row.querySelector('.view-transcript-btn').dataset.customer;
+                    transcripts.push({
+                        customer: customer,
+                        transcript: transcript
+                    });
+                });
+
+                // Show loading frame
+                const loadingFrame = document.createElement('iframe');
+                loadingFrame.id = 'loading-frame';
+                loadingFrame.src = '/loading';
+                loadingFrame.style.cssText = 'display: block; border: none; width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000;';
+                document.body.appendChild(loadingFrame);
+
+                // Call the grade-transcripts endpoint
+                fetch('/grade-transcripts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcripts: transcripts.map(t => t.transcript)
+                    })
+                })
+                .then(response => {
+                    // Remove loading frame
+                    document.body.removeChild(loadingFrame);
+                    
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    window.location.href = '/grade-result';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while grading the transcripts.');
+                    // Remove loading frame if there's an error
+                    if (document.getElementById('loading-frame')) {
+                        document.body.removeChild(loadingFrame);
+                    }
+                });
+            });
+        </script>
+    </body>
+</html> 
