@@ -68,12 +68,12 @@
                     statusMessage.textContent = "Hold on, let's get you logged into Podium...";
                     twoFactorForm.style.display = 'block';
                     container.style.display = 'none';
-                } else if (event.data === 'start_grading') {
-                    statusMessage.textContent = "Now, let's grade those transcripts...";
-                    twoFactorForm.style.display = 'none';
-                    container.style.display = 'block';
                 } else if (event.data === 'fetch_transcripts') {
                     statusMessage.textContent = "Let's fetch those transcripts...";
+                    twoFactorForm.style.display = 'none';
+                    container.style.display = 'block';
+                } else if (event.data.type === 'grading_progress') {
+                    statusMessage.textContent = `Now, let's grade those transcripts...(${event.data.current}/${event.data.total})`;
                     twoFactorForm.style.display = 'none';
                     container.style.display = 'block';
                 }

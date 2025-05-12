@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect
+from flask import Flask, render_template, jsonify, request, redirect, Response
 import subprocess
 import json
 import atexit
@@ -181,34 +181,43 @@ def grade_transcripts():
     if total_count != customers.get_len_phone_nums():
         print(f"Warning: Mismatch between number of transcripts ({total_count}) and phone numbers ({customers.get_len_phone_nums()})")
     
-    results = []
-    gradable_count = sum(1 for t in transcripts if not t.startswith('FAILED'))
-    
-    for i in range(total_count):
-        if not transcripts[i].startswith('FAILED'):
-            grade = random.choice(GRADES)
-            grade_secondary = "" #random.choice(["Booked", "Spam"])
-            # # simulate grade time
-            # time.sleep(0.5)
-            #grade, grade_secondary = clean_response(sentiment_analysis(transcripts[i]))
-        else:
-            grade = ""
-            grade_secondary = ""
+    def generate():
+        results = []
+        gradable_count = sum(1 for t in transcripts if not t.startswith('FAILED'))
+        
+        for i in range(total_count):
+            # Send progress update
+            yield f"PROGRESS:{i+1}/{total_count}\n"
+            
+            if not transcripts[i].startswith('FAILED'):
+                grade = random.choice(GRADES)
+                grade_secondary = "" #random.choice(["Booked", "Spam"])
+                # # simulate grade time
+                time.sleep(0.5)
+                #grade, grade_secondary = clean_response(sentiment_analysis(transcripts[i]))
+            else:
+                grade = ""
+                grade_secondary = ""
 
-        results.append({
-            "phone_number": phone_nums[i] if i < len(phone_nums) else "Unknown",  # Handle potential mismatch
-            "grade": grade,
-            "grade_secondary": grade_secondary,
-            "transcript": transcripts[i]
-        })   
+            results.append({
+                "phone_number": phone_nums[i] if i < len(phone_nums) else "Unknown",  # Handle potential mismatch
+                "grade": grade,
+                "grade_secondary": grade_secondary,
+                "transcript": transcripts[i]
+            })   
 
-    grading_results = {
-        "output": results,
-        "gradable_count": gradable_count,
-        "failed_count": total_count - gradable_count
-    }
-    
-    return jsonify({"success": True})
+        # Store results globally
+        global grading_results
+        grading_results = {
+            "output": results,
+            "gradable_count": gradable_count,
+            "failed_count": total_count - gradable_count
+        }
+        
+        # Send completion signal
+        yield "DONE\n"
+
+    return Response(generate(), mimetype='text/plain')
 
 @app.route('/grade-result')
 def grade_result():

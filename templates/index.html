@@ -123,7 +123,11 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            loadingFrame.contentWindow.postMessage('start_grading', '*');
+                            loadingFrame.contentWindow.postMessage({
+                                type: 'grading_progress',
+                                current: 0,
+                                total: 0  // We don't know the total yet, it will be updated when grading starts
+                            }, '*');
                         } else {
                             loadingFrame.contentWindow.postMessage('show_error', '*');
                         }

@@ -128,33 +128,78 @@
                 loadingFrame.style.cssText = 'display: block; border: none; width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000;';
                 document.body.appendChild(loadingFrame);
 
-                // Call the grade-transcripts endpoint
-                fetch('/grade-transcripts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        transcripts: transcripts.map(t => t.transcript)
+                // Wait for frame to load then start grading
+                loadingFrame.onload = function() {
+                    loadingFrame.contentWindow.postMessage({
+                        type: 'grading_progress',
+                        current: 0,
+                        total: transcripts.length
+                    }, '*');
+
+                    // Call the grade-transcripts endpoint
+                    fetch('/grade-transcripts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            transcripts: transcripts.map(t => t.transcript)
+                        })
                     })
-                })
-                .then(response => {
-                    // Remove loading frame
-                    document.body.removeChild(loadingFrame);
-                    
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    window.location.href = '/grade-result';
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while grading the transcripts.');
-                    // Remove loading frame if there's an error
-                    if (document.getElementById('loading-frame')) {
-                        document.body.removeChild(loadingFrame);
-                    }
-                });
+                    .then(response => {
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let buffer = '';
+                        
+                        function readChunk() {
+                            reader.read().then(({value, done}) => {
+                                if (done) {
+                                    return;
+                                }
+                                
+                                // Decode the chunk and add to buffer
+                                buffer += decoder.decode(value, {stream: true});
+                                
+                                // Process complete lines
+                                const lines = buffer.split('\n');
+                                buffer = lines.pop(); // Keep the last incomplete line in buffer
+                                
+                                for (const line of lines) {
+                                    if (line === 'DONE') {
+                                        window.location.href = '/grade-result';
+                                        return;
+                                    }
+                                    
+                                    const match = line.match(/PROGRESS:(\d+)\/(\d+)/);
+                                    if (match) {
+                                        loadingFrame.contentWindow.postMessage({
+                                            type: 'grading_progress',
+                                            current: match[1],
+                                            total: match[2]
+                                        }, '*');
+                                    }
+                                }
+                                
+                                readChunk();
+                            }).catch(error => {
+                                console.error('Error reading chunk:', error);
+                                alert('An error occurred while grading the transcripts.');
+                                if (document.getElementById('loading-frame')) {
+                                    document.body.removeChild(loadingFrame);
+                                }
+                            });
+                        }
+                        
+                        readChunk();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while grading the transcripts.');
+                        if (document.getElementById('loading-frame')) {
+                            document.body.removeChild(loadingFrame);
+                        }
+                    });
+                };
             });
         </script>
     </body>
