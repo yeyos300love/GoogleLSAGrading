@@ -149,7 +149,7 @@ def fetch_transcripts():
     transcripts = [t for t in current_output.split('-' * 25) if t]
     transcripts = [t[1:] for t in transcripts]
     
-    print('customers:',len(customers.get_phone_nums()))
+    #print('customers:',len(customers.get_phone_nums()))
     
     # Create the transcripts_data in the expected format
     transcripts_data = []

@@ -26,8 +26,8 @@
                     
                     <!-- 2FA Form (Hidden by default) -->
                     <div id="two_factor_form" style="display: none;">
-                        <form id="twoFactorForm" onsubmit="submit_two_factor(event)">
-                            <input type="text" id="two_factor_code" placeholder="enter code (ex. 123456)">
+                        <form id="twoFactorForm" onsubmit="submit_two_factor(event)" autocomplete="off">
+                            <input type="text" id="two_factor_code" placeholder="enter code (ex. 123456)" autocomplete="off">
                             <button type="submit" class="action-button">Submit</button>
                         </form>
                     </div>
