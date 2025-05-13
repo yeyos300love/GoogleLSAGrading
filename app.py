@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, Response
+from flask import Flask, render_template, jsonify, request, redirect, Response, stream_with_context
 import subprocess
 import json
 import atexit
@@ -21,6 +21,7 @@ active_process = None
 
 # Add at the top with other globals
 grading_results = None
+transcripts_data = None
 
 # delete file storing temporary code when program ends
 def cleanup():
@@ -73,6 +74,13 @@ def home():
 def transcripts():
     return render_template('transcripts.html')
 
+@app.route('/transcript-result')
+def transcript_result():
+    global transcripts_data
+    if not transcripts_data:
+        return redirect('/transcripts')
+    return render_template('transcript_result.html', transcripts=transcripts_data)
+
 @app.route('/transcript-result-test')
 def transcript_result_test():
     # Load test transcript data
@@ -100,7 +108,10 @@ def run():
 
 @app.route('/fetch-transcripts', methods=['POST'])
 def fetch_transcripts():
-    global active_process
+    return Response(stream_with_context(fetch_transcripts_stream()), mimetype='text/event-stream')
+
+def fetch_transcripts_stream():
+    global active_process, transcripts_data
         
     if not active_process:
         return jsonify({"error": "No active process found. Please start again."}), 400
@@ -128,7 +139,11 @@ def fetch_transcripts():
             break
             
         if line.startswith("FETCH_PROGRESS:"):
-            # Just continue - we don't need to handle progress updates here
+            # Parse and send progress
+            parts = line.split(":")[1].strip().split("/")
+            current = parts[0].strip()
+            total = parts[1].strip()
+            yield f"data: {json.dumps({'type': 'fetch_progress', 'current': current, 'total': total})}\n\n"
             continue
         elif line.startswith("Enter temporary code:"):
             continue
@@ -149,18 +164,19 @@ def fetch_transcripts():
     transcripts = [t for t in current_output.split('-' * 25) if t]
     transcripts = [t[1:] for t in transcripts]
     
-    #print('customers:',len(customers.get_phone_nums()))
-    
     # Create the transcripts_data in the expected format
-    transcripts_data = []
+    transcripts_data_endpoint = []
     for i, transcript in enumerate(transcripts):
-        transcripts_data.append({
+        transcripts_data_endpoint.append({
             'customer': customers.get_phone_nums()[i] if i < len(customers.get_phone_nums()) else "Unknown",
             'transcript': transcript
         })
 
-    # Return transcripts
-    return render_template('transcript_result.html', transcripts=transcripts_data)
+    # Store globally
+    transcripts_data = transcripts_data_endpoint
+
+    # Return completion signal
+    yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
 @app.route('/grade-transcripts', methods=['POST'])
 def grade_transcripts():
