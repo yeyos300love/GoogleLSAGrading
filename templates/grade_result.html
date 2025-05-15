@@ -71,7 +71,8 @@
 
             // Modal functions
             function showTranscript(transcript, phoneNumber) {
-                transcriptText.textContent = transcript;
+                const formattedTranscript = transcript.replace(/\\n/g, '\n').replace(/\\'/g, "'");
+                transcriptText.textContent = formattedTranscript;
                 const isFailure = transcript.trim().startsWith('FAILED');
                 document.querySelector('.title-group h4').textContent = `${phoneNumber} - ${isFailure ? 'Failed' : 'Latest Call'}`;
 

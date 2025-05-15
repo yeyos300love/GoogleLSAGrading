@@ -80,7 +80,7 @@
 
                 function showTranscript(transcript, phoneNumber) {
                     // Replace literal \n with actual newlines
-                    const formattedTranscript = transcript.replace(/\\n/g, '\n');
+                    const formattedTranscript = transcript.replace(/\\n/g, '\n').replace(/\\'/g, "'");
                     transcriptText.textContent = formattedTranscript;
                     const isFailure = transcript.trim().startsWith('FAILED');
                     document.querySelector('.title-group h4').textContent = `${phoneNumber} - ${isFailure ? 'Failed' : 'Latest Call'}`;

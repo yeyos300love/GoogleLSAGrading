@@ -202,11 +202,11 @@ def grade_transcripts():
             yield f"PROGRESS:{i+1}/{total_count}\n"
             
             if not transcripts[i].startswith('FAILED'):
-                grade = random.choice(GRADES)
-                grade_secondary = "" #random.choice(["Booked", "Spam"])
+                #grade = random.choice(GRADES)
+                #grade_secondary = "" #random.choice(["Booked", "Spam"])
                 # # simulate grade time
-                time.sleep(0.5)
-                #grade, grade_secondary = clean_response(sentiment_analysis(transcripts[i]))
+                #time.sleep(0.5)
+                grade, grade_secondary = clean_response(sentiment_analysis(transcripts[i]))
             else:
                 grade = ""
                 grade_secondary = ""
