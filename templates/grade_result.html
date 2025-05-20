@@ -193,7 +193,7 @@
                         } else {
                             this.classList.add('failure-grade');
                         }
-                        handleGradeChange(this);
+                        handleGradeChange(this, row.grade_secondary);
                     });
                     
                     gradeTd.appendChild(gradeDropdown);
@@ -217,13 +217,13 @@
                     
                     tbody.appendChild(tr);
                     
-                    // Initialize secondary grade
-                    handleGradeChange(gradeDropdown);
+                    // Initialize secondary grade with the value from backend
+                    handleGradeChange(gradeDropdown, row.grade_secondary);
                 });
             }
 
             // Handle grade changes and secondary grade options
-            function handleGradeChange(gradeDropdown) {
+            function handleGradeChange(gradeDropdown, initialSecondaryGrade = '') {
                 const row = gradeDropdown.closest('tr');
                 const secondaryCell = row.cells[2];
                 const selectedGrade = gradeDropdown.value;
@@ -238,7 +238,7 @@
                 
                 // Create the secondary dropdown or clear the cell
                 if (options.length > 0) {
-                    const currentValue = secondaryCell.querySelector('select')?.value || '';
+                    const currentValue = secondaryCell.querySelector('select')?.value || initialSecondaryGrade;
                     const dropdown = document.createElement('select');
                     dropdown.className = 'grade-dropdown';
                     

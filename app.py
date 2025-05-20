@@ -211,6 +211,8 @@ def grade_transcripts():
                 grade = ""
                 grade_secondary = ""
 
+            #print(grade, grade_secondary)
+
             results.append({
                 "phone_number": phone_nums[i] if i < len(phone_nums) else "Unknown",  # Handle potential mismatch
                 "grade": grade,
