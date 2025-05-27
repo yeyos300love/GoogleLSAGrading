@@ -74,6 +74,10 @@ def home():
 def transcripts():
     return render_template('transcripts.html')
 
+@app.route('/graded')
+def graded():
+    return render_template('graded.html')
+
 @app.route('/transcript-result')
 def transcript_result():
     global transcripts_data
@@ -96,6 +100,30 @@ def transcript_result_test():
         })
     
     return render_template('transcript_result.html', transcripts=transcripts_data)
+
+@app.route('/graded-result-test')
+def graded_result_test():
+    # Load test transcript data
+    with open('sample_data/sample_transcripts.json', 'r', encoding='utf-8') as f:
+        test_transcripts = json.load(f)
+    
+    # Create a list of dictionaries with the required format
+    results = []
+    for transcript in test_transcripts:
+        results.append({
+            'phone_number': transcript['customer'],
+            'transcript': transcript['transcript'],
+            'grade': transcript['grade'],
+            'grade_secondary': transcript['grade_secondary']
+        })  
+
+        grading_results = {
+            "output": results,
+            "gradable_count": 0, #gradable_count,
+            "failed_count": 0 #total_count - gradable_count
+        }
+    
+    return render_template('grade_result.html', results=grading_results)
 
 @app.route('/run-script', methods=['POST'])
 def run():
