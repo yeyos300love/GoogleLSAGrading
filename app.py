@@ -18,6 +18,7 @@ from llm import sentiment_analysis
 customers = Customers([])
 two_fact_code = TwoFactCode('000000')
 active_process = None
+glsa_process = None
 
 # Add at the top with other globals
 grading_results = None
@@ -266,6 +267,26 @@ def grade_result():
     if not grading_results:
         return redirect('/transcripts')
     return render_template('grade_result.html', results=grading_results)
+
+@app.route('/glsa')
+def glsa():
+    return render_template('glsa.html')
+
+@app.route('/run-glsa', methods=['POST'])
+def run_glsa():
+    global glsa_process
+    glsa_script = resource_path('glsa.py')
+    python_executable = sys.executable
+    glsa_process = subprocess.Popen([python_executable, glsa_script])
+    return jsonify({"success": True})
+
+@app.route('/stop-glsa', methods=['POST'])
+def stop_glsa():
+    global glsa_process
+    if glsa_process:
+        glsa_process.terminate()
+        glsa_process = None
+    return jsonify({"success": True})
 
 @app.route('/upload-csv', methods=['POST'])
 def upload_csv():

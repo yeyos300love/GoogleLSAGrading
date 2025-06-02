@@ -58,7 +58,7 @@ html, body {
 .eye {
     height: 10px;
     width: 5px;
-    background-color: var(--robot-blue);
+    background-color: #28a745;
     animation: 2s eyeBlink 0.35s linear infinite;
     border-radius: 40%;
 }
@@ -230,9 +230,9 @@ html, body {
 }
 
 @keyframes eyeBlink {
-    0% { background-color: var(--robot-blue); }
+    0% { background-color: #28a745; }
     15% { background-color: var(--robot-dark); }
-    30% { background-color: var(--robot-blue); }
+    30% { background-color: #28a745; }
     85% { background-color: var(--robot-dark); }
-    100% { background-color: var(--robot-blue); }
+    100% { background-color: #28a745; }
 }

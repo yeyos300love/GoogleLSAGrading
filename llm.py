@@ -1,7 +1,7 @@
 from openai import OpenAI
-from data import API_KEY
+from data import OPENAI_API_KEY
 
-api_key = API_KEY
+api_key = OPENAI_API_KEY
 
 def sentiment_analysis(transcript: str) -> tuple:
 

@@ -1,106 +1,142 @@
-from selenium import webdriver 
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-import sys
-import os
-from data import USERNAME, PASSWORD
+from data import Customer, USERNAME, PASSWORD
 
+from langchain_openai import ChatOpenAI
+from browser_use import Agent
+from dotenv import load_dotenv
+load_dotenv()
 
+import asyncio
 
-# login
-username = USERNAME
-password = PASSWORD
-# urls
-LOGIN_URL = 'https://ads.google.com/localservices/'
+llm = ChatOpenAI(model="gpt-4.1") #gpt-4o
 
+# (215) 804-8145 GRADED
+# (503) 334-5574
+#graded_customer = Customer(phone='(215) 804-8145', grade='Very satisfied', grade_secondary='Booked')
 
-# setup selenium
-options = Options()
-#options.add_argument("--headless")  # run without opening a browser
-options.add_argument("--disable-gpu")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--window-size=1920,1080")  # Set a specific window size
-options.add_argument("--start-maximized")
-options.add_experimental_option("detach", True)
+customers_to_grade = [
+    Customer(phone='(215) 804-8145', grade='Very satisfied', grade_secondary='Booked'),
+    Customer(phone='(503) 334-5574', grade='Neither satisfied nor dissatisfied', grade_secondary=''),
+]
 
-def create_driver():
-    """Create a Chrome driver instance based on the environment"""
-    global driver
-    
-    try:
-        # Check if we're running in Replit
-        if 'REPL_ID' in os.environ:
-            replit_options = webdriver.ChromeOptions()
-            replit_options.add_argument('--no-sandbox')
-            replit_options.add_argument('--headless')
-            replit_options.add_argument('--disable-dev-shm-usage')
-            replit_options.add_argument('--window-size=1920,1080')  # Add window size
-            replit_options.add_argument('--start-maximized')  # Add maximize
-            
-            # Use environment variables set in replit.nix
-            chrome_binary = os.getenv('CHROME_BIN', '/usr/bin/chromium')
-            chromedriver_path = os.getenv('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
-            
-            replit_options.binary_location = chrome_binary
-            service = Service(executable_path=chromedriver_path)
-            
-            driver = webdriver.Chrome(
-                service=service,
-                options=replit_options
-            )
+def generate_grading_steps(grade, grade_secondary):
+    """Generate grading steps based on grade and grade_secondary"""
+    if grade == 'Neither satisfied nor dissatisfied':
+        return f'''
+        12. Select {grade}
+        13. Select "Archive"
+        '''
+    elif grade == 'Very satisfied' and grade_secondary == 'Booked':
+        return f'''
+        12. Select {grade}
+        13. Select "It converted into a booked customer or client"
+        14. Select "Done"
+        15. Select "Mark Booked"
+        16. Select "Save"
+        '''
+    elif grade == 'Very satisfied' and grade_secondary != 'Booked':
+        return f'''
+        12. Select {grade}
+        13. Select {grade_secondary}
+        14. Select "Archive"
+        '''
+    elif grade == 'Very dissatisfied':
+        return f'''
+        12. Select {grade}
+        13. Select {grade_secondary}
+        14. Select "Archive"
+        '''
+    else:
+        raise ValueError(f"Invalid grade: {grade}")
+
+async def main():
+    prompt_parts = [
+    '''
+    1. Login using g_username & g_password for their respective sections.
+    2. Wait 1 second
+    3. Select Advantage Heating & Air Conditioning
+    4. Wait 1 second
+    5. Filter the table by selecting "Any lead type" dropdown menu & use up down arrows to highlight "Phone leads" and select using enter. No need to scroll 
+    6. Wait 1 second
+    7. Filter the table by selecting "Any charge status" dropdown menu & use up down arrows to highlight "Charged leads" and select using enter. No need to scroll
+    '''
+    ]
+
+    # Add steps for each customer
+    step_counter = 8
+    for i, customer in enumerate(customers_to_grade):
+        phone = customer.get_phone()
+        grade, grade_secondary = customer.get_grades()
+        grading_steps = generate_grading_steps(grade, grade_secondary)
+        
+        customer_steps = f'''
+        {step_counter}. Locate number: "{phone}"
+            - Might be located on a different page. Use pagination buttons located at the bottom of the table to navigate. Be sure to thoroughly scroll each new page you are searching. don't just search within the current view window
+            - If number not found, try searching for number one more time before moving to the next page.
+        {step_counter + 1}. Select "{phone}" row when located.
+        {step_counter + 2}. Select "Rate this lead"
+        {step_counter + 3}. Wait 1 second
+        {grading_steps}
+        '''
+        
+        # If not the last customer, add step to return to main table
+        if i < len(customers_to_grade) - 1:
+            customer_steps += f'''
+        {step_counter + 4}. Return to the main leads table to process the next customer
+        {step_counter + 5}. Wait 1 second
+        '''
+            step_counter += 6
         else:
-            chrome_service = Service()
-            chrome_service.creation_flags = 0x08000000  # No Window flag for Windows
-            driver = webdriver.Chrome(
-                service=chrome_service,
-                options=options
-            )
-            
-    except Exception as e:
-        print(f"Failed to create driver: {str(e)}")
-        raise
-    
-    return driver
+            step_counter += 4
+        
+        prompt_parts.append(customer_steps)
 
-def wait_and_find_element(by, value, timeout=40):
-    """Wait for element to be clickable and return it"""
-    element = WebDriverWait(driver, timeout).until(
-        EC.element_to_be_clickable((by, value))
+    # Add final stop instruction
+    prompt_parts.append(f'''
+    {step_counter}. STOP ALL ACTIONS
+    ''')
+
+    # Combine all parts
+    prompt = ''.join(prompt_parts)
+
+    # print(f"Processing {len(customers_to_grade)} customers:")
+    # for customer in customers_to_grade:
+    #     phone = customer.get_phone()
+    #     grade, grade_secondary = customer.get_grades()
+    #     print(f"  - {phone}: {grade} -> {grade_secondary}")
+    # print()
+
+    # prompt = f'''
+    # 1. Login using g_username & g_password for their respective sections.
+    # 2. Wait 1 second
+    # 3. Select Advantage Heating & Air Conditioning
+    # 4. Wait 1 second
+    # 5. Filter the table by selecting "Any lead type" dropdown menu & use up down arrows to highlight "Phone leads" and select using enter. No need to scroll 
+    # 6. Wait 1 second
+    # 7. Filter the table by selecting "Any charge status" dropdown menu & use up down arrows to highlight "Charged leads" and select using enter. No need to scroll
+    # 8. Locate number: "{phone}"
+    #     - Might be located on a different page. Use pagnation buttons located at the bottom of the table to navigate. Be sure to thoroughly scroll each new page you are searching. don't just search within the current view window
+    #     - If number not found, try searching for number one more time before moving to the next page.
+    # 9. Select "{phone}" row when located.
+    # 10. Select "Rate this lead"
+    # 11. Wait 1 second
+    # {grading_steps}
+    # 15. STOP ALL ACTIONS
+    # '''    
+    #-Hit "All time" dropdown menu & select Last month
+
+    initial_actions = [
+        {'open_tab': {'url': 'https://ads.google.com/localservices/'}},
+    ]
+
+    sensitive_data = {'g_username': USERNAME, 'g_password': PASSWORD}
+
+    agent = Agent(
+        task=prompt,
+        llm=llm,
+        initial_actions=initial_actions,
+        sensitive_data=sensitive_data
     )
-    return element
+    result = await agent.run()
+    print(result)
 
-if __name__ == '__main__':
-    driver = create_driver()
-    
-    # podium.py '(971) 998-9211', '(509) 637-5941'
-
-    examples = sys.argv[1:]
-
-    driver.get(LOGIN_URL)
-
-    #login_link = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div[1]/a')
-    #login_link.send_keys(Keys.RETURN)
-
-    login_button = wait_and_find_element(By.XPATH, '//*[@id="gb"]/div[2]/div[3]/div[1]/a')
-    login_button.click()
-
-    username_form = wait_and_find_element(By.XPATH, '//*[@id="identifierId"]')
-    username_form.send_keys(username)
-    #username_form.send_keys(Keys.RETURN)
-    username_form_submit = wait_and_find_element(By.XPATH, '//*[@id="identifierNext"]/div/button')
-    username_form_submit.click()
-
-    password_form = wait_and_find_element(By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')
-    password_form.send_keys(password)
-    password_form_submit = wait_and_find_element(By.XPATH, '//*[@id="passwordNext"]/div/button')
-    #password_form_submit.click()
-
-    # Advantage Heating & Air Conditioning
-    #account_selector = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div/div[2]/div[2]/div[1]/span[1]/a')
-    #account_selector.click()
-    
+asyncio.run(main())

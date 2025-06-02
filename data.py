@@ -42,12 +42,25 @@ class Customers:
     
     def get_phone_nums(self):
         return self.phone_nums
+    
+class Customer:
+    def __init__(self, phone: str, grade: str = "Not Graded", grade_secondary: str = "Not Graded", transcript: str = "Not Fetched"):
+        self.phone = phone
+        self.grade = grade
+        self.grade_secondary = grade_secondary
+        self.transcript = transcript
+    
+    def get_phone(self):
+        return self.phone
+    
+    def get_grades(self):
+        return (self.grade, self.grade_secondary)
 
 # try enviornment variables (replit, render, railway, etc)
 try:
     USERNAME = os.environ.get("USERNAME")
     PASSWORD = os.environ.get("PASSWORD")
-    API_KEY = os.environ.get("API_KEY")
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 except Exception as e:
     # try loading secrets through Docker (defined in docker-compose)
     # if fail, load secrets locally
@@ -62,7 +75,7 @@ except Exception as e:
                 will_explode = secret_file.read().strip().split('\n')
         USERNAME = will_explode[0]
         PASSWORD = will_explode[1]
-        API_KEY = will_explode[2]    
+        OPENAI_API_KEY = will_explode[2]    
     except Exception as e:
         print(f"Error reading secrets: {str(e)}")
 
