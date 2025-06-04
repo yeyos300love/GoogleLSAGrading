@@ -75,3 +75,7 @@ support = true
 [auth]
 pageEnabled = false
 buttonEnabled = false
+
+[[ports]]
+localPort = 8080
+externalPort = 80

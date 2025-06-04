@@ -15,6 +15,26 @@
         pkgs.gcc
         pkgs.nodejs
 
+        # Missing libraries for Playwright
+        pkgs.nss
+        pkgs.nspr
+        pkgs.dbus
+        pkgs.atk
+        pkgs.at-spi2-atk
+        pkgs.cups
+        pkgs.expat
+        pkgs.libxcb
+        pkgs.libxkbcommon
+        pkgs.at-spi2-core
+        pkgs.libXcomposite
+        pkgs.libXdamage
+        pkgs.libXfixes
+        pkgs.mesa
+        pkgs.pango
+        pkgs.cairo
+        pkgs.systemd
+        pkgs.alsa-lib
+
     ];
     env = {
         PYTHONBIN = "${pkgs.python311Full}/bin/python3.11";
