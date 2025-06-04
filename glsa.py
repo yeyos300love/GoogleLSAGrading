@@ -152,7 +152,23 @@ async def main():
 
     sensitive_data = {'g_username': USERNAME, 'g_password': PASSWORD}
 
-    browser_session = BrowserSession(headless=True) if 'REPL_ID' in os.environ else BrowserSession(headless=False)
+    # Configure browser session for Replit
+    if 'REPL_ID' in os.environ:
+        # For Replit - use system chromium and disable headless for VNC
+        browser_session = BrowserSession(
+            headless=False,  # Enable VNC display
+            browser_args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--remote-debugging-port=9222",
+                "--display=:0"  # Use VNC display
+            ],
+            executable_path=os.getenv('CHROME_BIN', '/nix/store/*/chromium/bin/chromium')
+        )
+    else:
+        browser_session = BrowserSession(headless=False)
+
 
     agent = Agent(
         task=prompt,
