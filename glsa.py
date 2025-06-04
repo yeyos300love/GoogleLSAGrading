@@ -159,6 +159,8 @@ async def main():
             headless=False,  # Enable VNC display
             browser_args=[
                 "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-seccomp-filter-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
                 "--remote-debugging-port=9222",
