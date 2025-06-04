@@ -313,7 +313,7 @@
                     
                     // Then show the results after options are loaded
                     const resultsData = JSON.parse(document.getElementById('results-data').textContent);
-                    showResults(resultsData.output);
+                    showResults(resultsData); //showResults(resultsData.output);
                 } catch (error) {
                     console.error('Error initializing page:', error);
                 }
@@ -322,7 +322,7 @@
                 document.querySelector('.close')?.addEventListener('click', closeTranscript);
                 
                 // Add click handler for send to GoogleLSA button
-                document.querySelector('.send-grader-btn')?.addEventListener('click', function() {
+                document.querySelector('.send-grader-btn')?.addEventListener('click', async function() {
                     // Check if any grade dropdowns are unselected
                     const allGradeDropdowns = document.querySelectorAll('.grade-dropdown');
                     const hasUnselectedGrades = Array.from(allGradeDropdowns).some(dropdown => {
@@ -334,8 +334,39 @@
                         return;
                     }
                     
-                    // If all grades are selected, proceed with sending to GoogleLSA
-                    window.location.href = '/glsa';
+                    // Collect current grade data from the UI
+                    const rows = document.querySelectorAll('#results-table tbody tr');
+                    const updatedGrades = Array.from(rows).map(row => {
+                        const gradeDropdown = row.querySelector('.grade-dropdown');
+                        const secondaryGradeDropdown = row.cells[2].querySelector('.grade-dropdown');
+                        
+                        return {
+                            grade: gradeDropdown ? gradeDropdown.value : '',
+                            grade_secondary: secondaryGradeDropdown ? secondaryGradeDropdown.value : ''
+                        };
+                    });
+                    
+                    // Send updated grades to backend
+                    try {
+                        const response = await fetch('/update-grades', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ grades: updatedGrades })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to update grades');
+                        }
+                        
+                        // If successful, proceed to GoogleLSA
+                        window.location.href = '/glsa';
+                        
+                    } catch (error) {
+                        console.error('Error updating grades:', error);
+                        alert('Failed to update grades. Please try again.');
+                    }
                 });
             });
         </script>

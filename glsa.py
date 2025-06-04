@@ -1,4 +1,5 @@
 from data import Customer, USERNAME, PASSWORD
+import sys
 
 from langchain_openai import ChatOpenAI
 from browser_use import Agent
@@ -9,46 +10,72 @@ import asyncio
 
 llm = ChatOpenAI(model="gpt-4.1") #gpt-4o
 
-# (215) 804-8145 GRADED
-# (503) 334-5574
-#graded_customer = Customer(phone='(215) 804-8145', grade='Very satisfied', grade_secondary='Booked')
 
-customers_to_grade = [
-    Customer(phone='(215) 804-8145', grade='Very satisfied', grade_secondary='Booked'),
-    Customer(phone='(503) 334-5574', grade='Neither satisfied nor dissatisfied', grade_secondary=''),
-]
+def process_args(args):
+    # Parse customers from command line arguments
+    customers_to_grade = []
+    for arg in args:
+        try:
+            parts = arg.split(',')
+            if len(parts) != 3:
+                print(f"Error: Invalid format for '{arg}'. Expected format: 'phone,grade,grade_secondary'")
+                #return
+            
+            phone = parts[0].strip()
+            grade = parts[1].strip()
+            grade_secondary = parts[2].strip()
+            
+            # Create Customer object
+            customer = Customer(phone=phone, grade=grade, grade_secondary=grade_secondary)
+            customers_to_grade.append(customer)
+            
+        except Exception as e:
+            print(f"Error parsing argument '{arg}': {e}")
+            
+    return customers_to_grade
 
-def generate_grading_steps(grade, grade_secondary):
-    """Generate grading steps based on grade and grade_secondary"""
+
+def generate_grading_steps(grade, grade_secondary, start_step):
+    """Generate grading steps based on grade and grade_secondary with dynamic step numbers"""
     if grade == 'Neither satisfied nor dissatisfied':
         return f'''
-        12. Select {grade}
-        13. Select "Archive"
+        {start_step}. Select {grade}
+        {start_step + 1}. Select "Archive"
         '''
     elif grade == 'Very satisfied' and grade_secondary == 'Booked':
         return f'''
-        12. Select {grade}
-        13. Select "It converted into a booked customer or client"
-        14. Select "Done"
-        15. Select "Mark Booked"
-        16. Select "Save"
+        {start_step}. Select {grade}
+        {start_step + 1}. Select "It converted into a booked customer or client"
+        {start_step + 2}. Select "Done"
+        {start_step + 3}. Select "Mark Booked"
+        {start_step + 4}. Select "Save"
         '''
     elif grade == 'Very satisfied' and grade_secondary != 'Booked':
         return f'''
-        12. Select {grade}
-        13. Select {grade_secondary}
-        14. Select "Archive"
+        {start_step}. Select {grade}
+        {start_step + 1}. Select {grade_secondary}
+        {start_step + 2}. Select "Archive"
         '''
     elif grade == 'Very dissatisfied':
         return f'''
-        12. Select {grade}
-        13. Select {grade_secondary}
-        14. Select "Archive"
+        {start_step}. Select {grade}
+        {start_step + 1}. Select {grade_secondary}
+        {start_step + 2}. Select "Archive"
         '''
     else:
         raise ValueError(f"Invalid grade: {grade}")
 
+
 async def main():
+    customers_to_grade = process_args(sys.argv[1:])
+
+    # (215) 804-8145 GRADED
+    # (503) 334-5574
+
+    # customers_to_grade = [
+    #     Customer(phone='(503) 334-5574', grade='Neither satisfied nor dissatisfied', grade_secondary=''),
+    # ]
+
     prompt_parts = [
     '''
     1. Login using g_username & g_password for their respective sections.
@@ -66,7 +93,7 @@ async def main():
     for i, customer in enumerate(customers_to_grade):
         phone = customer.get_phone()
         grade, grade_secondary = customer.get_grades()
-        grading_steps = generate_grading_steps(grade, grade_secondary)
+        grading_steps = generate_grading_steps(grade, grade_secondary, step_counter + 4)
         
         customer_steps = f'''
         {step_counter}. Locate number: "{phone}"
@@ -78,15 +105,24 @@ async def main():
         {grading_steps}
         '''
         
+        # Calculate how many steps the grading process takes
+        if grade == 'Neither satisfied nor dissatisfied':
+            grading_step_count = 2
+        elif grade == 'Very satisfied' and grade_secondary == 'Booked':
+            grading_step_count = 5
+        else:  # 'Very satisfied' (non-booked) or 'Very dissatisfied'
+            grading_step_count = 3
+        
         # If not the last customer, add step to return to main table
         if i < len(customers_to_grade) - 1:
+            return_step = step_counter + 4 + grading_step_count
             customer_steps += f'''
-        {step_counter + 4}. Return to the main leads table to process the next customer
-        {step_counter + 5}. Wait 1 second
+        {return_step}. Return to the main leads table to process the next customer
+        {return_step + 1}. Wait 1 second
         '''
-            step_counter += 6
+            step_counter = return_step + 2
         else:
-            step_counter += 4
+            step_counter = step_counter + 4 + grading_step_count
         
         prompt_parts.append(customer_steps)
 
@@ -104,25 +140,6 @@ async def main():
     #     grade, grade_secondary = customer.get_grades()
     #     print(f"  - {phone}: {grade} -> {grade_secondary}")
     # print()
-
-    # prompt = f'''
-    # 1. Login using g_username & g_password for their respective sections.
-    # 2. Wait 1 second
-    # 3. Select Advantage Heating & Air Conditioning
-    # 4. Wait 1 second
-    # 5. Filter the table by selecting "Any lead type" dropdown menu & use up down arrows to highlight "Phone leads" and select using enter. No need to scroll 
-    # 6. Wait 1 second
-    # 7. Filter the table by selecting "Any charge status" dropdown menu & use up down arrows to highlight "Charged leads" and select using enter. No need to scroll
-    # 8. Locate number: "{phone}"
-    #     - Might be located on a different page. Use pagnation buttons located at the bottom of the table to navigate. Be sure to thoroughly scroll each new page you are searching. don't just search within the current view window
-    #     - If number not found, try searching for number one more time before moving to the next page.
-    # 9. Select "{phone}" row when located.
-    # 10. Select "Rate this lead"
-    # 11. Wait 1 second
-    # {grading_steps}
-    # 15. STOP ALL ACTIONS
-    # '''    
-    #-Hit "All time" dropdown menu & select Last month
 
     initial_actions = [
         {'open_tab': {'url': 'https://ads.google.com/localservices/'}},

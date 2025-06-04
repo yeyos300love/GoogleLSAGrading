@@ -50,6 +50,29 @@
                     </div>
                 </div>
                 <div class="status-text">Agent is idle</div>
+                
+                {% if results %}
+                <div id="results-container">
+                    <table id="glsa-results-table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Grade</th>
+                                <th>Grade Secondary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>{{ result.phone_number }}</td>
+                                <td>{{ result.grade }}</td>
+                                <td>{{ result.grade_secondary }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
             </div>
         </div>
     

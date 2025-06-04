@@ -4,10 +4,11 @@ import json
 import atexit
 import os
 import sys
-import random
 import tempfile
-import webbrowser
 import time
+
+import random
+import webbrowser
 
 from data import load_customer_data, clean_response
 from data import Customers, TwoFactCode
@@ -24,6 +25,10 @@ glsa_process = None
 grading_results = None
 transcripts_data = None
 
+
+
+
+
 # delete file storing temporary code when program ends
 def cleanup():
     """ delete temporary code file """
@@ -32,23 +37,16 @@ def cleanup():
             os.remove("2fa_code.json")
     except Exception as e:
         print(f"Error during cleanup: {e}")
-
 # register the cleanup function
 atexit.register(cleanup)
 
 def resource_path(relative_path):
     """ get absolute path to resource """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    
+    base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# begin the retrieving transcript subprocess
 def fetch_transcript():
-    """ begin the retrieving transcript subprocess """
+    """ retrieving transcript subprocess """
     podium_script = resource_path('podium.py')
     python_executable = sys.executable
     get_transcript_result = subprocess.Popen([python_executable, podium_script] + customers.get_phone_nums(), 
@@ -58,18 +56,21 @@ def fetch_transcript():
                                            text=True)
     return get_transcript_result
 
+
+
 app = Flask(__name__,
            template_folder=resource_path('templates'),
            static_folder=resource_path('static')) # initialize app
-
-# Set the secret key for session management
-app.secret_key = os.urandom(24)
 
 @app.route('/')
 
 @app.route('/home')
 def home():
     return render_template('index.html')
+
+@app.route('/loading')
+def loading():
+    return render_template('loading.html')
 
 @app.route('/transcripts')
 def transcripts():
@@ -79,52 +80,88 @@ def transcripts():
 def graded():
     return render_template('graded.html')
 
-@app.route('/transcript-result')
-def transcript_result():
-    global transcripts_data
-    if not transcripts_data:
-        return redirect('/transcripts')
-    return render_template('transcript_result.html', transcripts=transcripts_data)
+@app.route('/glsa')
+def glsa():
+    return render_template('glsa.html', results=grading_results)
 
-@app.route('/transcript-result-test')
-def transcript_result_test():
-    # Load test transcript data
-    with open('sample_data/sample_transcripts.json', 'r', encoding='utf-8') as f:
-        test_transcripts = json.load(f)
+
+# update grades when sending to GoogleLSA
+@app.route('/update-grades', methods=['POST'])
+def update_grades():
+    global grading_results
+    try:
+        updated_grades = request.json.get('grades', [])
+        if not updated_grades:
+            return jsonify({"error": "No grade data provided"}), 400
+        
+        # Update the global grading_results with the new grades
+        for i, updated_grade in enumerate(updated_grades):
+            if i < len(grading_results):
+                grading_results[i]['grade'] = updated_grade.get('grade', '')
+                grading_results[i]['grade_secondary'] = updated_grade.get('grade_secondary', '')
+        
+        return jsonify({"success": True, "message": "Grades updated successfully"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# used for dropdown options
+@app.route('/options')
+def get_options():
+    try:
+        with open('options.json', 'r') as f:
+            options = json.load(f)
+        return jsonify(options)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/upload-csv', methods=['POST'])
+def upload_csv():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
     
-    # Create a list of dictionaries with the required format
-    transcripts_data = []
-    for transcript in test_transcripts:
-        transcripts_data.append({
-            'customer': transcript['customer'],
-            'transcript': transcript['transcript']
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    
+    if not file.filename.endswith('.csv'):
+        return jsonify({"error": "File must be a CSV"}), 400
+    
+    try:
+        # Create a temporary file
+        temp_dir = tempfile.mkdtemp()
+        temp_path = os.path.join(temp_dir, 'uploaded.csv')
+        
+        # Save the uploaded file
+        file.save(temp_path)
+        
+        # Load customer data from the temporary file
+        customers.set_phone_nums(load_customer_data(temp_path))
+
+        # Clean up: remove temporary file and directory
+        os.remove(temp_path)
+        os.rmdir(temp_dir)
+        
+        if not customers:
+            return jsonify({"error": "No customer data found in CSV"}), 400
+        
+        return jsonify({
+            "success": True,
+            "message": "I was able to read that no problem!",
+            #"customer_count": len(customers),
+            "needs_2fa": True
         })
-    
-    return render_template('transcript_result.html', transcripts=transcripts_data)
+        
+    except Exception as e:
+        # Ensure cleanup happens even if there's an error
+        if 'temp_path' in locals() and os.path.exists(temp_path):
+            os.remove(temp_path)
+        if 'temp_dir' in locals() and os.path.exists(temp_dir):
+            os.rmdir(temp_dir)
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/graded-result-test')
-def graded_result_test():
-    # Load test transcript data
-    with open('sample_data/sample_transcripts.json', 'r', encoding='utf-8') as f:
-        test_transcripts = json.load(f)
-    
-    # Create a list of dictionaries with the required format
-    results = []
-    for transcript in test_transcripts:
-        results.append({
-            'phone_number': transcript['customer'],
-            'transcript': transcript['transcript'],
-            'grade': transcript['grade'],
-            'grade_secondary': transcript['grade_secondary']
-        })  
-
-        grading_results = {
-            "output": results,
-            "gradable_count": 0, #gradable_count,
-            "failed_count": 0 #total_count - gradable_count
-        }
-    
-    return render_template('grade_result.html', results=grading_results)
 
 @app.route('/run-script', methods=['POST'])
 def run():
@@ -134,6 +171,7 @@ def run():
     # start the subprocess and store it
     active_process = fetch_transcript()
     return jsonify({"needs_2fa": True})
+
 
 @app.route('/fetch-transcripts', methods=['POST'])
 def fetch_transcripts():
@@ -207,6 +245,7 @@ def fetch_transcripts_stream():
     # Return completion signal
     yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
+
 @app.route('/grade-transcripts', methods=['POST'])
 def grade_transcripts():
     global grading_results
@@ -224,7 +263,7 @@ def grade_transcripts():
     
     def generate():
         results = []
-        gradable_count = sum(1 for t in transcripts if not t.startswith('FAILED'))
+        #gradable_count = sum(1 for t in transcripts if not t.startswith('FAILED'))
         
         for i in range(total_count):
             # Send progress update
@@ -251,16 +290,25 @@ def grade_transcripts():
 
         # Store results globally
         global grading_results
-        grading_results = {
-            "output": results,
-            "gradable_count": gradable_count,
-            "failed_count": total_count - gradable_count
-        }
-        
+        # grading_results = {
+        #     "output": results,
+        #     "gradable_count": gradable_count,
+        #     "failed_count": total_count - gradable_count
+        # }
+        grading_results = results
+
         # Send completion signal
         yield "DONE\n"
 
     return Response(generate(), mimetype='text/plain')
+
+
+@app.route('/transcript-result')
+def transcript_result():
+    global transcripts_data
+    if not transcripts_data:
+        return redirect('/transcripts')
+    return render_template('transcript_result.html', transcripts=transcripts_data)
 
 @app.route('/grade-result')
 def grade_result():
@@ -268,16 +316,14 @@ def grade_result():
         return redirect('/transcripts')
     return render_template('grade_result.html', results=grading_results)
 
-@app.route('/glsa')
-def glsa():
-    return render_template('glsa.html')
 
 @app.route('/run-glsa', methods=['POST'])
 def run_glsa():
     global glsa_process
-    glsa_script = resource_path('glsa.py')
+    global grading_results
+    glsa_script = resource_path('test.py') #resource_path('glsa.py')
     python_executable = sys.executable
-    glsa_process = subprocess.Popen([python_executable, glsa_script])
+    glsa_process = subprocess.Popen([python_executable, glsa_script] + [f"{item['phone_number']},{item['grade']},{item['grade_secondary']}" for item in grading_results]  )
     return jsonify({"success": True})
 
 @app.route('/stop-glsa', methods=['POST'])
@@ -288,78 +334,57 @@ def stop_glsa():
         glsa_process = None
     return jsonify({"success": True})
 
-@app.route('/upload-csv', methods=['POST'])
-def upload_csv():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No file selected"}), 400
-    
-    if not file.filename.endswith('.csv'):
-        return jsonify({"error": "File must be a CSV"}), 400
-    
-    try:
-        # Create a temporary file
-        temp_dir = tempfile.mkdtemp()
-        temp_path = os.path.join(temp_dir, 'uploaded.csv')
-        
-        # Save the uploaded file
-        file.save(temp_path)
-        
-        # Load customer data from the temporary file
-        customers.set_phone_nums(load_customer_data(temp_path))
 
-        # Clean up: remove temporary file and directory
-        os.remove(temp_path)
-        os.rmdir(temp_dir)
-        
-        if not customers:
-            return jsonify({"error": "No customer data found in CSV"}), 400
-        
-        return jsonify({
-            "success": True,
-            "message": "I was able to read that no problem!",
-            #"customer_count": len(customers),
-            "needs_2fa": True
+
+@app.route('/transcript-result-test')
+def transcript_result_test():
+    # Load test transcript data
+    with open('sample_data/sample_transcripts.json', 'r', encoding='utf-8') as f:
+        test_transcripts = json.load(f)
+    
+    # Create a list of dictionaries with the required format
+    transcripts_data = []
+    for transcript in test_transcripts:
+        transcripts_data.append({
+            'customer': transcript['customer'],
+            'transcript': transcript['transcript']
         })
-        
-    except Exception as e:
-        # Ensure cleanup happens even if there's an error
-        if 'temp_path' in locals() and os.path.exists(temp_path):
-            os.remove(temp_path)
-        if 'temp_dir' in locals() and os.path.exists(temp_dir):
-            os.rmdir(temp_dir)
-        return jsonify({"error": str(e)}), 500
+    
+    return render_template('transcript_result.html', transcripts=transcripts_data)
 
-@app.route('/reset-customers', methods=['POST'])
-def reset_customers():
-    global customers
-    customers = Customers([])  # reset the customers instance to an empty array
-    return jsonify({"success": True, "message": "Customers reset successfully."})
 
-@app.route('/options')
-def get_options():
-    try:
-        with open('options.json', 'r') as f:
-            options = json.load(f)
-        return jsonify(options)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route('/graded-result-test')
+def graded_result_test():
+    # Load test transcript data
+    with open('sample_data/sample_transcripts.json', 'r', encoding='utf-8') as f:
+        test_transcripts = json.load(f)
+    
+    # Create a list of dictionaries with the required format
+    results = []
+    for transcript in test_transcripts:
+        results.append({
+            'phone_number': transcript['customer'],
+            'transcript': transcript['transcript'],
+            'grade': transcript['grade'],
+            'grade_secondary': transcript['grade_secondary']
+        })  
+    
+    global grading_results
+    grading_results = results
 
-def open_browser():
-    """Wait a second and then open the browser"""
-    time.sleep(1)  # Give the server a second to start
-    webbrowser.open('http://127.0.0.1:5001')
+    return render_template('grade_result.html', results=results)
+
+
+# def open_browser():
+#     """Wait a second and then open the browser"""
+#     time.sleep(1)  # Give the server a second to start
+#     webbrowser.open('http://127.0.0.1:5001')
 
 def run_flask():
     """Run the Flask application"""
     app.run(host='0.0.0.0', port=8080) #, debug = True)
 
-@app.route('/loading')
-def loading():
-    return render_template('loading.html')
+
 
 if __name__ == '__main__':
     run_flask()

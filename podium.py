@@ -120,7 +120,7 @@ def search_number(phone_num: str):
         )
         hover_call_box.click()
     except:
-        return ['FAILED', 'No call box', 'No conversations found in Podium']
+        transcript_text = ['FAILED', 'No call box', 'No conversations found in Podium']
 
     try:
         # get transcript
@@ -131,10 +131,10 @@ def search_number(phone_num: str):
         # store transcript text
         transcript_text = transcript_pane.text.split('\n')[2:]
     except:
-        return ['FAILED', 'No transcript text', 'Ensure call box selected is the correct one']
+        transcript_text = ['FAILED', 'No transcript text', 'Ensure call box selected is the correct one']
     
     # clear the search box
-    search_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[1]/input')
+    #search_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[1]/input')
     search_box.click()
     search_box.send_keys(Keys.CONTROL + 'a')
     search_box.send_keys(Keys.DELETE)
@@ -155,6 +155,14 @@ def navigate_to_transcript(phone_nums: list) -> list:
     # select calls button on left side navigation bar
     call_nav_button = wait_and_find_element(By.XPATH, '//*[@id="navigate-to-phones"]')
     call_nav_button.click()
+
+    # missed, all calls, etc.
+    # button xpath changed on every broswer instance, selected surrounding button
+    option_dropdown = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[2]')
+    option_dropdown.click()
+    # full xpath needed for option since name was tied to changing button
+    all_calls_option = wait_and_find_element(By.XPATH, '/html/body/div[1]/div[2]/div[4]/div/div/div[1]/div[1]/div/div[3]/div/button[1]')
+    all_calls_option.click()
 
     transcripts_element_text = {}
     for i, num in enumerate(phone_nums, 1):
