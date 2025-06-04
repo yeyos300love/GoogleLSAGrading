@@ -22,17 +22,15 @@
         pkgs.atk
         pkgs.at-spi2-atk
         pkgs.cups
-        pkgs.expat
         pkgs.libxcb
         pkgs.libxkbcommon
         pkgs.at-spi2-core
-        pkgs.libXcomposite
-        pkgs.libXdamage
-        pkgs.libXfixes
+        pkgs.xorg.libXcomposite
+        pkgs.xorg.libXdamage
+        pkgs.xorg.libXfixes
         pkgs.mesa
         pkgs.pango
         pkgs.cairo
-        pkgs.systemd
         pkgs.alsa-lib
 
     ];
