@@ -17,7 +17,7 @@
         pkgs.playwright-driver
 
     ];
-    env = {Add commentMore actions
+    env = {
         PYTHONBIN = "${pkgs.python311Full}/bin/python3.11";
         CHROME_BIN = "${pkgs.chromium}/bin/chromium";
         CHROMEDRIVER_PATH = "${pkgs.chromedriver}/bin/chromedriver";
