@@ -154,12 +154,13 @@ async def main():
 
     # Configure browser session for Replit
     if 'REPL_ID' in os.environ:
-        # For Replit - use system chromium and disable headless for VNC
+        # For Replit - disable sandbox via environment variable
+        os.environ['CHROMIUM_FLAGS'] = '--no-sandbox --disable-setuid-sandbox --disable-seccomp-filter-sandbox'
         browser_session = BrowserSession(
             headless=False,  # Enable VNC display
             browser_args=[
                 "--no-sandbox",
-                "--disable-setuid-sandbox",
+                "--disable-setuid-sandbox", 
                 "--disable-seccomp-filter-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
