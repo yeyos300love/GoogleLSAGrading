@@ -14,7 +14,6 @@
         pkgs.gnumake
         pkgs.gcc
         pkgs.nodejs
-        pkgs.playwright-driver
 
     ];
     env = {
@@ -22,6 +21,6 @@
         CHROME_BIN = "${pkgs.chromium}/bin/chromium";
         CHROMEDRIVER_PATH = "${pkgs.chromedriver}/bin/chromedriver";
         PYTHONPATH = "${pkgs.python311Packages.setuptools}/${pkgs.python311.sitePackages}";
-        PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
+        PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
     };
 } 
