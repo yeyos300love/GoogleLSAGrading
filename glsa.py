@@ -1,8 +1,9 @@
 from data import Customer, convert_grade_secondary_to_full, USERNAME, PASSWORD
 import sys
+import os
 
 from langchain_openai import ChatOpenAI
-from browser_use import Agent
+from browser_use import Agent, BrowserSession
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -151,11 +152,14 @@ async def main():
 
     sensitive_data = {'g_username': USERNAME, 'g_password': PASSWORD}
 
+    browser_session = BrowserSession(headless=True) if 'REPL_ID' in os.environ else BrowserSession(headless=False)
+
     agent = Agent(
         task=prompt,
         llm=llm,
         initial_actions=initial_actions,
-        sensitive_data=sensitive_data
+        sensitive_data=sensitive_data,
+        browser_session=browser_session
     )
     result = await agent.run()
     print(result)
