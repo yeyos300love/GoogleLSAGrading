@@ -8,6 +8,7 @@ Run sentiment analysis on phone call (conversaion) transcripts.
 2. fetch transcripts from [Podium](https://www.podium.com/about-us/)
 3. sentiment analysis on transcripts
 4. **output:** graded transcripts
+5. broswer agent performs actions based on output.
 
 ## 1. Running Application
 
