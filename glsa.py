@@ -158,7 +158,7 @@ async def main():
         os.environ['CHROMIUM_FLAGS'] = '--no-sandbox --disable-setuid-sandbox --disable-seccomp-filter-sandbox'
         browser_session = BrowserSession(
             headless=False,  # Enable VNC display
-            browser_args=[
+            args=[
                 "--no-sandbox",
                 "--disable-setuid-sandbox", 
                 "--disable-seccomp-filter-sandbox",
