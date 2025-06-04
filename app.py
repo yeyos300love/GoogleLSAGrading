@@ -321,7 +321,7 @@ def grade_result():
 def run_glsa():
     global glsa_process
     global grading_results
-    glsa_script = resource_path('test.py') #resource_path('glsa.py')
+    glsa_script = resource_path('glsa.py')
     python_executable = sys.executable
     glsa_process = subprocess.Popen([python_executable, glsa_script] + [f"{item['phone_number']},{item['grade']},{item['grade_secondary']}" for item in grading_results]  )
     return jsonify({"success": True})

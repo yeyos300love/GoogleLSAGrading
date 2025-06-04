@@ -1,4 +1,4 @@
-from data import Customer, USERNAME, PASSWORD
+from data import Customer, convert_grade_secondary_to_full, USERNAME, PASSWORD
 import sys
 
 from langchain_openai import ChatOpenAI
@@ -35,8 +35,10 @@ def process_args(args):
     return customers_to_grade
 
 
-def generate_grading_steps(grade, grade_secondary, start_step):
+def generate_grading_steps(grade, grade_secondary_short, start_step):
     """Generate grading steps based on grade and grade_secondary with dynamic step numbers"""
+    grade_secondary = convert_grade_secondary_to_full(grade_secondary_short)
+
     if grade == 'Neither satisfied nor dissatisfied':
         return f'''
         {start_step}. Select {grade}
@@ -69,11 +71,13 @@ def generate_grading_steps(grade, grade_secondary, start_step):
 async def main():
     customers_to_grade = process_args(sys.argv[1:])
 
-    # (215) 804-8145 GRADED
+    # (215) 804-8145 GRADED: satisfied -> booked
     # (503) 334-5574
+    # (971) 218-7149
 
     # customers_to_grade = [
     #     Customer(phone='(503) 334-5574', grade='Neither satisfied nor dissatisfied', grade_secondary=''),
+    #     Customer(phone='(971) 218-7149', grade='Very satisfied', grade_secondary='Booked'),
     # ]
 
     prompt_parts = [
@@ -117,7 +121,7 @@ async def main():
         if i < len(customers_to_grade) - 1:
             return_step = step_counter + 4 + grading_step_count
             customer_steps += f'''
-        {return_step}. Return to the main leads table to process the next customer
+        {return_step}. Return to table by clicking the arrow on top left of the screen.
         {return_step + 1}. Wait 1 second
         '''
             step_counter = return_step + 2

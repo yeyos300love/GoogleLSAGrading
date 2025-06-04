@@ -8,12 +8,15 @@ import os
 #phone_nums_example = ['(971) 998-9211', '(509) 637-5941']
 PHONES_EXAMPLES = ['(317) 956-0147', '(314) 215-9742', '(440) 864-5454', '(503) 857-3235', '(971) 451-4080', '(503) 339-6510', '17373005221', '(360) 887-8033', '(503) 719-0085']
 
+
 # fetch grade options
 with open("options.json", "r") as f:
     grades_json = json.load(f)
 GRADES = grades_json["GRADES"]
 GRADE_SECONDARY_POS = grades_json["GRADE_SECONDARY_POS"]
 GRADE_SECONDARY_NEG = grades_json["GRADE_SECONDARY_NEG"]
+GRADE_SECONDARY_POS_FULL = grades_json["GRADE_SECONDARY_POS_FULL"]
+GRADE_SECONDARY_NEG_FULL = grades_json["GRADE_SECONDARY_NEG_FULL"]
 
 
 class TwoFactCode:
@@ -30,6 +33,7 @@ class TwoFactCode:
         with open("2fa_code.json", "w") as f:
             json.dump({"code": self.code}, f)  # Save to a file
 
+
 class Customers:
     def __init__(self, phone_nums):
         self.phone_nums = phone_nums
@@ -43,6 +47,7 @@ class Customers:
     def get_phone_nums(self):
         return self.phone_nums
     
+
 class Customer:
     def __init__(self, phone: str, grade: str = "Not Graded", grade_secondary: str = "Not Graded", transcript: str = "Not Fetched"):
         self.phone = phone
@@ -55,6 +60,7 @@ class Customer:
     
     def get_grades(self):
         return (self.grade, self.grade_secondary)
+
 
 # try enviornment variables (replit, render, railway, etc)
 try:
@@ -79,6 +85,9 @@ except Exception as e:
     except Exception as e:
         print(f"Error reading secrets: {str(e)}")
 
+
+
+
 # preprocess data returned from llm calls
 def clean_response(response:str) -> tuple:
     """
@@ -99,6 +108,32 @@ def clean_response(response:str) -> tuple:
     if grade_secondary == 'Wrong Number': grade_secondary = 'Service not offered'
 
     return grade, grade_secondary
+
+
+def convert_grade_secondary_to_full(grade_secondary: str) -> str:
+    """
+    Convert a short grade_secondary value to its full description.
+    
+    Args:
+        grade_secondary (str): The short grade secondary value
+        
+    Returns:
+        str: The full description of the grade secondary, or the original value if not found
+    """
+    # Check if it's in the positive list
+    if grade_secondary in GRADE_SECONDARY_POS:
+        index = GRADE_SECONDARY_POS.index(grade_secondary)
+        return GRADE_SECONDARY_POS_FULL[index]
+    
+    # Check if it's in the negative list
+    elif grade_secondary in GRADE_SECONDARY_NEG:
+        index = GRADE_SECONDARY_NEG.index(grade_secondary)
+        return GRADE_SECONDARY_NEG_FULL[index]
+    
+    # If not found in either list, return the original value
+    else:
+        return grade_secondary
+    
 
 def load_charged_leads(path: str):
     # read the leads-inbox CSV file with headers, preserving empty spaces and handling trailing commas
