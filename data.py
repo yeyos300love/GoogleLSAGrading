@@ -34,19 +34,6 @@ class TwoFactCode:
             json.dump({"code": self.code}, f)  # Save to a file
 
 
-class Customers:
-    def __init__(self, phone_nums):
-        self.phone_nums = phone_nums
-
-    def set_phone_nums(self, phone_nums):
-        self.phone_nums = phone_nums
-
-    def get_len_phone_nums(self):
-        return len(self.phone_nums)
-    
-    def get_phone_nums(self):
-        return self.phone_nums
-    
 
 class Customer:
     def __init__(self, phone: str, grade: str = "Not Graded", grade_secondary: str = "Not Graded", transcript: str = "Not Fetched"):
@@ -60,6 +47,30 @@ class Customer:
     
     def get_grades(self):
         return (self.grade, self.grade_secondary)
+
+
+class Customers:
+    def __init__(self, customers: list[Customer]):
+        self.customers = customers
+    
+    def get_customers(self):
+        """
+        Returns list of ONLY customer phone numbers
+        """
+        return [customer.get_phone() for customer in self.customers]
+    
+    def get_len_customers(self):
+        return len(self.customers)
+    
+    def add_customer(self, phone: str, grade: str = "Not Graded", grade_secondary: str = "Not Graded", transcript: str = "Not Fetched"):
+        self.customers.append(Customer(phone, grade, grade_secondary, transcript))
+
+
+
+
+
+
+
 
 
 # try enviornment variables (replit, render, railway, etc)

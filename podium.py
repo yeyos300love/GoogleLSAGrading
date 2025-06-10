@@ -10,6 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 import time 
 import sys
 import os
+import json
+import tempfile
 #from bs4 import BeautifulSoup
 from data import USERNAME, PASSWORD
 
@@ -104,6 +106,10 @@ def login(url: str):
     two_fact_box.send_keys(Keys.RETURN)
     time.sleep(5) # wait for the page to load
 
+
+
+
+
 def search_number(phone_num: str):
     search_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[1]/input')
     search_box.clear()
@@ -143,8 +149,6 @@ def search_number(phone_num: str):
     return transcript_text
 
 def navigate_to_transcript(phone_nums: list) -> list:
-    login(LOGIN_URL)
-
     # add mobile number pop up - wait for it to be clickable
     try:
         pop_up_cancel = wait_and_find_element(By.XPATH, '//*[@id="chakra-modal-2"]/button')
@@ -164,49 +168,95 @@ def navigate_to_transcript(phone_nums: list) -> list:
     all_calls_option = wait_and_find_element(By.XPATH, '/html/body/div[1]/div[2]/div[4]/div/div/div[1]/div[1]/div/div[3]/div/button[1]')
     all_calls_option.click()
 
-    transcripts_element_text = {}
+    #transcripts_element_text = {}
     for i, num in enumerate(phone_nums, 1):
         print(f"FETCH_PROGRESS: {i}/{len(phone_nums)}", flush=True)
-        transcripts_element_text[num] = search_number(num)
+        
+        progress_file = 'data/uploaded_09JUN2025.json'
+
+        raw_transcript = search_number(num)
+
+        # remove '•' & convo letter icon
+        transcript_list = [item for item in raw_transcript if len(item) > 1]
+        # group data as [name, time, text]
+        transcript = [transcript_list[i:i+3] for i in range(0, len(transcript_list), 3)]
+        transcript_str = "\n\n".join(f"{i[0]} • {i[1]}\n{i[2]}" for i in transcript) #string
+
+        save_progress(num, transcript_str, progress_file)
+
+        #transcripts_element_text[num] = search_number(num)
         #print(num, transcripts_element_text[num])
 
-    return transcripts_element_text
+    #return transcripts_element_text
 
+
+def save_progress(phone_num, transcript_data, progress_file):
+    """Save individual transcript progress to file"""
+    try:
+        # Load existing progress
+        if os.path.exists(progress_file):
+            with open(progress_file, 'r', encoding='utf-8') as f:
+                progress = json.load(f)
+        else:
+            progress = []
+        
+        # Find existing entry with the same customer phone number
+        existing_entry = None
+        for entry in progress:
+            if entry.get("customer") == phone_num:
+                existing_entry = entry
+                break
+        
+        if existing_entry:
+            # Update existing entry's transcript
+            existing_entry["transcript"] = transcript_data
+        else:
+            # Create new transcript object if no existing entry found
+            transcript_obj = {
+                "customer": phone_num,
+                "transcript": transcript_data,
+                "grade": "",
+                "grade_secondary": ""
+            }
+            progress.append(transcript_obj)
+        
+        # Save updated progress
+        with open(progress_file, 'w', encoding='utf-8') as f:
+            json.dump(progress, f, ensure_ascii=False, indent=2)
+            
+        return True
+    except Exception as e:
+        print(f"ERROR_SAVING: {phone_num} - {str(e)}", flush=True)
+        return False
 
 
 if __name__ == '__main__':
-    driver = create_driver()
     
-    # podium.py '(971) 998-9211', '(509) 637-5941'
+    # customer_phones_list = sys.argv[1:-1] # remove python, podium.py, & closing ]
+    # customer_phones_list[0] = customer_phones_list[0][1:] # remove opening [
+    #print(customer_phones_list)
+    #for customer_phone in customer_phones_list:
+        #print(customer_phone)
 
-    examples = sys.argv[1:]
-    #examples = sys.argv[1:-1] # remove python, podium.py, & closing ]
-    #examples[0] = examples[0][1:] # remove opening [
-    #print(examples)
-    #examples = phone_nums_example
+    json_file = sys.argv[1:][0]
+    PATH = os.path.join(os.path.dirname(__file__), 'data', json_file)
 
-    transcripts = ''
+    # Load existing progress
+    if os.path.exists(PATH):
+        with open(PATH, 'r', encoding='utf-8') as f:
+            customer_data = json.load(f)
 
-    transcripts_raw = navigate_to_transcript(examples)
-    #print(len(transcripts_raw))
-    #print(transcripts_raw.keys())
-    for key, value in transcripts_raw.items():
-        
-        # remove '•' & convo letter icon
-        transcript_list = [item for item in value if len(item) > 1]
-        # group data as [name, time, text]
-        transcript = [transcript_list[i:i+3] for i in range(0, len(transcript_list), 3)]
+    # Extract all customer phone numbers
+    customer_phones_list = [entry["customer"] for entry in customer_data]
 
-        transcript_str = "\n\n".join(f"{i[0]} • {i[1]}\n{i[2]}" for i in transcript) #string
+    driver = create_driver()
 
-        transcripts += '-'*25 + '\n' + transcript_str + '\n'
-        
-    transcripts = transcripts[:-1]
-        #transcripts += 'CUSTOMER: ' + key + ' ' + '-'*25 + '\n' + transcript_str + '\n'
+    login(LOGIN_URL)
+    transcripts_raw = navigate_to_transcript(customer_phones_list)
+    #print(transcripts_raw)
 
     # close browser session
     driver.quit()
-
-    print(transcripts)
+    
 
 ##### CTRL + / #####

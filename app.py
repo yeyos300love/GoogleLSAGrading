@@ -6,25 +6,22 @@ import os
 import sys
 import tempfile
 import time
+from datetime import datetime
 
 import random
 import webbrowser
 
 from data import load_customer_data, clean_response
-from data import Customers, TwoFactCode
+from data import Customer, Customers, TwoFactCode
 from data import GRADES, GRADE_SECONDARY_POS, GRADE_SECONDARY_NEG, PHONES_EXAMPLES #phone_nums_example
 from llm import sentiment_analysis
     
-# initialize the temporary code & subprocess
-customers = Customers([])
+# initialize the temporary code & subprocesses
 two_fact_code = TwoFactCode('000000')
 active_process = None
 glsa_process = None
-
-# Add at the top with other globals
-grading_results = None
-transcripts_data = None
-
+uploaded_filename = None
+customers = Customers([])
 
 
 
@@ -45,11 +42,40 @@ def resource_path(relative_path):
     base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-def fetch_transcript():
+def update_grades_in_file(phone_nums, grades, grades_secondary):
+    """Update the uploaded JSON file with grading results"""
+    global uploaded_filename
+    
+    try:
+        file_path = f'data/{uploaded_filename}'
+        
+        # Load existing data
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Update grades for each phone number
+        for i, phone_number in enumerate(phone_nums):
+            # Find existing entry with the same customer phone number
+            for entry in data:
+                if entry.get("customer") == phone_number:
+                    entry["grade"] = grades[i]
+                    entry["grade_secondary"] = grades_secondary[i]
+                    break
+        
+        # Save updated data
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            
+        return True
+    except Exception as e:
+        print(f"ERROR_UPDATING_GRADES: {str(e)}", flush=True)
+        return False
+
+def fetch_transcript(filename):
     """ retrieving transcript subprocess """
     podium_script = resource_path('podium.py')
     python_executable = sys.executable
-    get_transcript_result = subprocess.Popen([python_executable, podium_script] + customers.get_phone_nums(), 
+    get_transcript_result = subprocess.Popen([python_executable, podium_script, filename], 
                                            stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE,
@@ -82,25 +108,56 @@ def graded():
 
 @app.route('/glsa')
 def glsa():
+    global glsa_process, uploaded_filename
+    
+    with open(f'data/{uploaded_filename}', 'r', encoding='utf-8') as f:
+        test_transcripts = json.load(f)
+
+    # Create a list of dictionaries with the required format
+    grading_results = []
+    for transcript in test_transcripts:
+        grading_results.append({
+            'phone_number': transcript['customer'],
+            'transcript': transcript['transcript'],
+            'grade': transcript['grade'],
+            'grade_secondary': transcript['grade_secondary']
+        })  
+
     return render_template('glsa.html', results=grading_results)
 
 
 # update grades when sending to GoogleLSA
 @app.route('/update-grades', methods=['POST'])
 def update_grades():
-    global grading_results
+    global uploaded_filename
     try:
         updated_grades = request.json.get('grades', [])
         if not updated_grades:
             return jsonify({"error": "No grade data provided"}), 400
         
-        # Update the global grading_results with the new grades
-        for i, updated_grade in enumerate(updated_grades):
-            if i < len(grading_results):
-                grading_results[i]['grade'] = updated_grade.get('grade', '')
-                grading_results[i]['grade_secondary'] = updated_grade.get('grade_secondary', '')
+        # Load the current data from the uploaded file to get phone numbers in the correct order
+        file_path = f'data/{uploaded_filename}'
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
         
-        return jsonify({"success": True, "message": "Grades updated successfully"})
+        # Extract phone numbers and grades in the same order as the frontend table
+        phone_nums = []
+        grades = []
+        grades_secondary = []
+        
+        for i, updated_grade in enumerate(updated_grades):
+            if i < len(data):
+                phone_nums.append(data[i]['customer'])
+                grades.append(updated_grade.get('grade', ''))
+                grades_secondary.append(updated_grade.get('grade_secondary', ''))
+        
+        # Use the update_grades_in_file function to update the JSON file
+        success = update_grades_in_file(phone_nums, grades, grades_secondary)
+        
+        if success:
+            return jsonify({"success": True, "message": "Grades updated successfully"})
+        else:
+            return jsonify({"error": "Failed to update grades in file"}), 500
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -138,8 +195,39 @@ def upload_csv():
         file.save(temp_path)
         
         # Load customer data from the temporary file
-        customers.set_phone_nums(load_customer_data(temp_path))
+        #customers.set_phone_nums(load_customer_data(temp_path))
+        customers_found = load_customer_data(temp_path)
+        
+        # Create data directory if it doesn't exist
+        os.makedirs('data', exist_ok=True)
+        
+        # Create JSON file with uploaded customer data
+        current_date = datetime.now()
+        date_str = current_date.strftime("%d%b%Y")#.upper()
+        json_filename = f"uploaded_{date_str}.json"
+        json_filepath = os.path.join('data', json_filename)
+        
+        global uploaded_filename
+        uploaded_filename = json_filename
+        
+        # Create JSON structure similar to sample_transcripts but with only customer data
+        uploaded_data = []
+        for phone_number in customers_found:
+            uploaded_data.append({
+                "customer": phone_number,
+                "transcript": "",
+                "grade": "",
+                "grade_secondary": ""
+            })
 
+            customers.add_customer(phone_number)
+        
+        #print(customers.get_customers())
+
+        # Save to JSON file
+        with open(json_filepath, 'w', encoding='utf-8') as f:
+            json.dump(uploaded_data, f, indent=2)
+        
         # Clean up: remove temporary file and directory
         os.remove(temp_path)
         os.rmdir(temp_dir)
@@ -165,11 +253,9 @@ def upload_csv():
 
 @app.route('/run-script', methods=['POST'])
 def run():
-    # customers.set_phone_nums(PHONES_EXAMPLES)
-
-    global active_process
+    global active_process, uploaded_filename
     # start the subprocess and store it
-    active_process = fetch_transcript()
+    active_process = fetch_transcript(uploaded_filename)
     return jsonify({"needs_2fa": True})
 
 
@@ -192,7 +278,6 @@ def fetch_transcripts_stream():
     two_fact_code.update_code(code)
     
     # communicate with the stored process
-    transcripts = []
     current_output = ""
     
     # Send the code to the process
@@ -227,75 +312,56 @@ def fetch_transcripts_stream():
     # clear the process after we're done
     active_process = None
 
-    # split transcripts and filter out empty strings while preserving formatting
-    transcripts = [t for t in current_output.split('-' * 25) if t]
-    transcripts = [t[1:] for t in transcripts]
-    
-    # Create the transcripts_data in the expected format
-    transcripts_data_endpoint = []
-    for i, transcript in enumerate(transcripts):
-        transcripts_data_endpoint.append({
-            'customer': customers.get_phone_nums()[i] if i < len(customers.get_phone_nums()) else "Unknown",
-            'transcript': transcript
-        })
-
-    # Store globally
-    transcripts_data = transcripts_data_endpoint
-
     # Return completion signal
     yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
 
 @app.route('/grade-transcripts', methods=['POST'])
 def grade_transcripts():
-    global grading_results
-    # Get transcripts from request
-    transcripts = request.json.get('transcripts', [])
-    if not transcripts:
-        return jsonify({"error": "No transcripts provided"}), 400
-        
-    phone_nums = customers.get_phone_nums()
+    global uploaded_filename
+
+    phone_nums = customers.get_customers()
+    #print(phone_nums)
     
-    # Use transcript length and check for mismatch
-    total_count = len(transcripts)  # Use transcript length instead of phone number count
-    if total_count != customers.get_len_phone_nums():
-        print(f"Warning: Mismatch between number of transcripts ({total_count}) and phone numbers ({customers.get_len_phone_nums()})")
-    
+    total_count = customers.get_len_customers()
+
     def generate():
-        results = []
-        #gradable_count = sum(1 for t in transcripts if not t.startswith('FAILED'))
+        grades = []
+        grades_secondary = []
+        
+        # Load transcripts from JSON file
+        file_path = f'data/{uploaded_filename}'
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
         
         for i in range(total_count):
             # Send progress update
             yield f"PROGRESS:{i+1}/{total_count}\n"
             
-            if not transcripts[i].startswith('FAILED'):
-                #grade = random.choice(GRADES)
-                #grade_secondary = "" #random.choice(["Booked", "Spam"])
+            # Find transcript for this phone number
+            transcript = ""
+            for entry in data:
+                if entry.get("customer") == phone_nums[i]:
+                    transcript = entry.get("transcript", "")
+                    break
+            
+            if not transcript.startswith('FAILED'):
+                # grade = random.choice(GRADES)
+                # grade_secondary = "" #random.choice(["Booked", "Spam"])
                 # # simulate grade time
-                #time.sleep(0.5)
-                grade, grade_secondary = clean_response(sentiment_analysis(transcripts[i]))
+                # time.sleep(0.5)
+                grade, grade_secondary = clean_response(sentiment_analysis(transcript))
             else:
                 grade = ""
                 grade_secondary = ""
 
             #print(grade, grade_secondary)
 
-            results.append({
-                "phone_number": phone_nums[i] if i < len(phone_nums) else "Unknown",  # Handle potential mismatch
-                "grade": grade,
-                "grade_secondary": grade_secondary,
-                "transcript": transcripts[i]
-            })   
+            grades.append(grade)
+            grades_secondary.append(grade_secondary)
 
-        # Store results globally
-        global grading_results
-        # grading_results = {
-        #     "output": results,
-        #     "gradable_count": gradable_count,
-        #     "failed_count": total_count - gradable_count
-        # }
-        grading_results = results
+        # Update the uploaded JSON file with grades
+        update_grades_in_file(phone_nums, grades, grades_secondary)
 
         # Send completion signal
         yield "DONE\n"
@@ -305,22 +371,55 @@ def grade_transcripts():
 
 @app.route('/transcript-result')
 def transcript_result():
-    global transcripts_data
-    if not transcripts_data:
-        return redirect('/transcripts')
+    global uploaded_filename
+    with open(f'data/{uploaded_filename}', 'r', encoding='utf-8') as f:
+        test_transcripts = json.load(f)
+    
+    # Create a list of dictionaries with the required format
+    transcripts_data = []
+    for transcript in test_transcripts:
+        transcripts_data.append({
+            'customer': transcript['customer'],
+            'transcript': transcript['transcript']
+        })
+    
     return render_template('transcript_result.html', transcripts=transcripts_data)
 
 @app.route('/grade-result')
 def grade_result():
-    if not grading_results:
-        return redirect('/transcripts')
+    global uploaded_filename
+    with open(f'data/{uploaded_filename}', 'r', encoding='utf-8') as f:
+        test_transcripts = json.load(f)
+
+    # Create a list of dictionaries with the required format
+    grading_results = []
+    for transcript in test_transcripts:
+        grading_results.append({
+            'phone_number': transcript['customer'],
+            'transcript': transcript['transcript'],
+            'grade': transcript['grade'],
+            'grade_secondary': transcript['grade_secondary']
+        })  
     return render_template('grade_result.html', results=grading_results)
 
 
 @app.route('/run-glsa', methods=['POST'])
 def run_glsa():
-    global glsa_process
-    global grading_results
+    global glsa_process, uploaded_filename
+    
+    with open(f'data/{uploaded_filename}', 'r', encoding='utf-8') as f:
+        test_transcripts = json.load(f)
+
+    # Create a list of dictionaries with the required format
+    grading_results = []
+    for transcript in test_transcripts:
+        grading_results.append({
+            'phone_number': transcript['customer'],
+            'transcript': transcript['transcript'],
+            'grade': transcript['grade'],
+            'grade_secondary': transcript['grade_secondary']
+        })  
+    
     glsa_script = resource_path('glsa.py')
     python_executable = sys.executable
     glsa_process = subprocess.Popen([python_executable, glsa_script] + [f"{item['phone_number']},{item['grade']},{item['grade_secondary']}" for item in grading_results]  )
@@ -368,9 +467,6 @@ def graded_result_test():
             'grade': transcript['grade'],
             'grade_secondary': transcript['grade_secondary']
         })  
-    
-    global grading_results
-    grading_results = results
 
     return render_template('grade_result.html', results=results)
 

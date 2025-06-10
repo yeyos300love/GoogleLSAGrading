@@ -117,16 +117,11 @@
                     const grade = row.querySelector('.grade-dropdown').value;
                     const gradeSecondary = row.cells[2].querySelector('.grade-dropdown')?.value || '';
                     
-                    // Extract transcript from the button's onclick function
+                    // Extract transcript from the button's data attribute
                     let transcript = '';
-                    try {
-                        const transcriptBtn = row.querySelector('.view-transcript-btn');
-                        if (transcriptBtn) {
-                            const onclickStr = transcriptBtn.getAttribute('onclick');
-                            transcript = onclickStr.match(/showTranscript\(`(.*?)`,/)[1];
-                        }
-                    } catch (e) {
-                        console.error('Error extracting transcript:', e);
+                    const transcriptBtn = row.querySelector('.view-transcript-btn');
+                    if (transcriptBtn) {
+                        transcript = transcriptBtn.getAttribute('data-transcript') || '';
                     }
                     
                     // Escape quotes for CSV format
@@ -211,6 +206,9 @@
                         transcriptBtn.classList.add('failure');
                     }
                     transcriptBtn.textContent = 'View';
+                    // Fix encoding issues like â€¢ -> •
+                    const cleanTranscript = (row.transcript || '').replace(/â€¢/g, '•');
+                    transcriptBtn.setAttribute('data-transcript', cleanTranscript);
                     transcriptBtn.onclick = () => showTranscript(row.transcript || '', row.phone_number || '');
                     transcriptTd.appendChild(transcriptBtn);
                     tr.appendChild(transcriptTd);

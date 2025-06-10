@@ -2,6 +2,7 @@ __pycache__/
 secrets.txt
 
 glsag_app_env/
+data/
 
 docker-compose.yml
 Dockerfile
