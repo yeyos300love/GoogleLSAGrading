@@ -3,6 +3,7 @@ secrets.txt
 
 glsag_app_env/
 data/*
+!data/.gitkeep
 
 docker-compose.yml
 Dockerfile
