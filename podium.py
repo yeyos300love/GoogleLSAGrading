@@ -82,6 +82,88 @@ def wait_and_find_element(by, value, timeout=40):
     )
     return element
 
+def save_session():
+    """Save current session data"""
+    session_file = os.path.join(os.path.dirname(__file__), 'session_data.json')
+    session_data = {
+        'cookies': driver.get_cookies(),
+        'local_storage': driver.execute_script("return Object.assign({}, window.localStorage);"),
+        'session_storage': driver.execute_script("return Object.assign({}, window.sessionStorage);")
+    }
+    with open(session_file, 'w') as f:
+        json.dump(session_data, f)
+
+def load_session():
+    """Load saved session data"""
+    session_file = os.path.join(os.path.dirname(__file__), 'session_data.json')
+    if os.path.exists(session_file):
+        with open(session_file, 'r') as f:
+            session_data = json.load(f)
+        
+        # Navigate to app domain first
+        driver.get('https://app.podium.com/')
+        time.sleep(2)
+        
+        # Add cookies
+        for cookie in session_data['cookies']:
+            try:
+                driver.add_cookie(cookie)
+            except:
+                pass
+        
+        # Restore localStorage
+        for key, value in session_data['local_storage'].items():
+            driver.execute_script(f"window.localStorage.setItem('{key}', '{value}');")
+        
+        # Restore sessionStorage
+        for key, value in session_data['session_storage'].items():
+            driver.execute_script(f"window.sessionStorage.setItem('{key}', '{value}');")
+        
+        # Navigate to app and check if logged in
+        driver.get('https://app.podium.com/')
+        time.sleep(3)
+        
+        # Check if we're actually logged in by looking for navigation elements
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="navigate-to-phones"]'))
+            )
+            return True
+        except:
+            return False
+    return False
+
+def restart_driver():
+    """Restart driver and restore session"""
+    global driver
+    driver.quit()
+    driver = create_driver()
+    
+    if load_session():
+        navigate_to_calls_page()
+        return True
+    else:
+        login(LOGIN_URL)
+        navigate_to_calls_page()
+        save_session()
+        return True
+
+def navigate_to_calls_page():
+    """Navigate to the calls page after login/restart"""
+    try:
+        pop_up_cancel = wait_and_find_element(By.XPATH, '//*[@id="chakra-modal-2"]/button')
+        pop_up_cancel.click()
+    except:
+        pass
+
+    call_nav_button = wait_and_find_element(By.XPATH, '//*[@id="navigate-to-phones"]')
+    call_nav_button.click()
+
+    option_dropdown = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[2]')
+    option_dropdown.click()
+    all_calls_option = wait_and_find_element(By.XPATH, '/html/body/div[1]/div[2]/div[4]/div/div/div[1]/div[1]/div/div[3]/div/button[1]')
+    all_calls_option.click()
+
 def login(url: str):
     driver.get(url)
 
@@ -125,22 +207,22 @@ def search_number(phone_num: str):
             EC.element_to_be_clickable((By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[3]/div[2]'))
         )
         hover_call_box.click()
+        
+        try:
+            # get transcript
+            transcript_pane = WebDriverWait(driver, 20).until(
+                #EC.presence_of_element_located((By.XPATH, '//*[@id="app-container"]/div[5]/div/div[2]/div[2]/div/div[2]'))
+                EC.presence_of_element_located((By.XPATH, '//*[@id="app-container"]/div[5]/div/div[2]/div[2]/div/div[2]/div[2]'))
+            )
+            
+            # store transcript text
+            transcript_text = transcript_pane.text.split('\n')[2:]
+        except:
+            transcript_text = ['FAILED', 'No transcript text', 'Ensure call box selected is the correct one']
     except:
         transcript_text = ['FAILED', 'No call box', 'No conversations found in Podium']
-
-    try:
-        # get transcript
-        transcript_pane = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.XPATH, '//*[@id="app-container"]/div[5]/div/div[2]/div[2]/div/div[2]'))
-        )
-        
-        # store transcript text
-        transcript_text = transcript_pane.text.split('\n')[2:]
-    except:
-        transcript_text = ['FAILED', 'No transcript text', 'Ensure call box selected is the correct one']
     
     # clear the search box
-    #search_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[1]/input')
     search_box.click()
     search_box.send_keys(Keys.CONTROL + 'a')
     search_box.send_keys(Keys.DELETE)
@@ -148,46 +230,58 @@ def search_number(phone_num: str):
     
     return transcript_text
 
-def navigate_to_transcript(phone_nums: list) -> list:
-    # add mobile number pop up - wait for it to be clickable
-    try:
-        pop_up_cancel = wait_and_find_element(By.XPATH, '//*[@id="chakra-modal-2"]/button')
-        pop_up_cancel.click()
-    except:
-        print("No popup found, continuing...")
+def navigate_to_transcript(phone_nums: list, file_path: str):
+    navigate_to_calls_page()
 
-    # select calls button on left side navigation bar
-    call_nav_button = wait_and_find_element(By.XPATH, '//*[@id="navigate-to-phones"]')
-    call_nav_button.click()
-
-    # missed, all calls, etc.
-    # button xpath changed on every broswer instance, selected surrounding button
-    option_dropdown = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[2]')
-    option_dropdown.click()
-    # full xpath needed for option since name was tied to changing button
-    all_calls_option = wait_and_find_element(By.XPATH, '/html/body/div[1]/div[2]/div[4]/div/div/div[1]/div[1]/div/div[3]/div/button[1]')
-    all_calls_option.click()
-
-    #transcripts_element_text = {}
     for i, num in enumerate(phone_nums, 1):
         print(f"FETCH_PROGRESS: {i}/{len(phone_nums)}", flush=True)
-        
-        progress_file = 'data/uploaded_09JUN2025.json'
+
+        # restart driver every 50 customers
+        # if i % 50 == 0:
+        #     restart_driver()
+
+        # clear selenium artifacts every 50 customers
+        # if i % 50 == 0:
+        #     driver.refresh()
+        #     time.sleep(3)
+        #     navigate_to_calls_page()
 
         raw_transcript = search_number(num)
+        #print(raw_transcript)  
 
-        # remove '•' & convo letter icon
-        transcript_list = [item for item in raw_transcript if len(item) > 1]
-        # group data as [name, time, text]
-        transcript = [transcript_list[i:i+3] for i in range(0, len(transcript_list), 3)]
+        # # remove '•' & convo letter icon
+        # transcript_list = [item for item in raw_transcript if len(item) > 1]       
+        # filter transcript: remove "•" markers and single letter icons before names
+        filtered_transcript = []
+        i = 0
+        while i < len(raw_transcript):
+            item = raw_transcript[i]
+            
+            if item == "•":
+                # Skip "•" markers
+                i += 1
+                continue
+            
+            # Check if this is a single letter followed by a name (before "•")
+            if (len(item) == 1 and item.isalpha() and 
+                i + 2 < len(raw_transcript) and 
+                raw_transcript[i + 2] == "•"):
+                # Skip single letter icon, keep the name that follows
+                i += 1
+                filtered_transcript.append(raw_transcript[i])
+            else:
+                # Keep everything else (phone numbers, timestamps, dialog text)
+                filtered_transcript.append(item)
+            
+            i += 1
+        
+        # Group data as [name, time, text]
+        #transcript = [transcript_list[i:i+3] for i in range(0, len(transcript_list), 3)]
+        transcript = [filtered_transcript[i:i+3] for i in range(0, len(filtered_transcript), 3)]
         transcript_str = "\n\n".join(f"{i[0]} • {i[1]}\n{i[2]}" for i in transcript) #string
+        #print(transcript_str)
 
-        save_progress(num, transcript_str, progress_file)
-
-        #transcripts_element_text[num] = search_number(num)
-        #print(num, transcripts_element_text[num])
-
-    #return transcripts_element_text
+        save_progress(num, transcript_str, progress_file=file_path)
 
 
 def save_progress(phone_num, transcript_data, progress_file):
@@ -251,9 +345,11 @@ if __name__ == '__main__':
 
     driver = create_driver()
 
-    login(LOGIN_URL)
-    transcripts_raw = navigate_to_transcript(customer_phones_list)
-    #print(transcripts_raw)
+    if not load_session():
+        login(LOGIN_URL)
+        save_session()
+    
+    transcripts_raw = navigate_to_transcript(customer_phones_list, file_path=PATH)
 
     # close browser session
     driver.quit()

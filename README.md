@@ -25,7 +25,7 @@ python app.py
 Run  `podium.py`, to web scrape a list of phone numbers from podium, e.g.,
 
 ```bash
-python podium.py '(971) 998-9211', '(509) 637-5941'
+python podium.py uploaded_09JUN2025.json
 ```
 
 ### 2.2 Virtual Enviornment
