@@ -84,7 +84,7 @@ def wait_and_find_element(by, value, timeout=40):
 
 def save_session():
     """Save current session data"""
-    session_file = os.path.join(os.path.dirname(__file__), 'session_data.json')
+    session_file = os.path.join(os.path.dirname(__file__), 'data', 'session_data_podium.json')
     session_data = {
         'cookies': driver.get_cookies(),
         'local_storage': driver.execute_script("return Object.assign({}, window.localStorage);"),
@@ -95,7 +95,7 @@ def save_session():
 
 def load_session():
     """Load saved session data"""
-    session_file = os.path.join(os.path.dirname(__file__), 'session_data.json')
+    session_file = os.path.join(os.path.dirname(__file__), 'data', 'session_data_podium.json')
     if os.path.exists(session_file):
         with open(session_file, 'r') as f:
             session_data = json.load(f)
