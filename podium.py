@@ -345,10 +345,11 @@ if __name__ == '__main__':
 
     driver = create_driver()
 
-    if not load_session():
-        login(LOGIN_URL)
-        save_session()
-    
+    # if not load_session():
+    #     login(LOGIN_URL)
+    #     save_session()
+    login(LOGIN_URL)
+
     transcripts_raw = navigate_to_transcript(customer_phones_list, file_path=PATH)
 
     # close browser session

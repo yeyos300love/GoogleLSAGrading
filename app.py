@@ -6,10 +6,8 @@ import os
 import sys
 import tempfile
 import time
-from datetime import datetime
-
 import random
-import webbrowser
+from datetime import datetime
 
 from data import load_customer_data, clean_response
 from data import Customer, Customers, TwoFactCode
@@ -37,10 +35,12 @@ def cleanup():
 # register the cleanup function
 atexit.register(cleanup)
 
+
 def resource_path(relative_path):
     """ get absolute path to resource """
     base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
+
 
 def update_grades_in_file(phone_nums, grades, grades_secondary):
     """Update the uploaded JSON file with grading results"""
@@ -70,6 +70,7 @@ def update_grades_in_file(phone_nums, grades, grades_secondary):
     except Exception as e:
         print(f"ERROR_UPDATING_GRADES: {str(e)}", flush=True)
         return False
+
 
 def fetch_transcript(filename):
     """ retrieving transcript subprocess """
@@ -105,25 +106,6 @@ def transcripts():
 @app.route('/graded')
 def graded():
     return render_template('graded.html')
-
-@app.route('/glsa')
-def glsa():
-    global glsa_process, uploaded_filename
-    
-    with open(f'data/{uploaded_filename}', 'r', encoding='utf-8') as f:
-        test_transcripts = json.load(f)
-
-    # Create a list of dictionaries with the required format
-    grading_results = []
-    for transcript in test_transcripts:
-        grading_results.append({
-            'phone_number': transcript['customer'],
-            'transcript': transcript['transcript'],
-            'grade': transcript['grade'],
-            'grade_secondary': transcript['grade_secondary']
-        })  
-
-    return render_template('glsa.html', results=grading_results)
 
 
 # update grades when sending to GoogleLSA
@@ -385,6 +367,7 @@ def transcript_result():
     
     return render_template('transcript_result.html', transcripts=transcripts_data)
 
+
 @app.route('/grade-result')
 def grade_result():
     global uploaded_filename
@@ -403,9 +386,9 @@ def grade_result():
     return render_template('grade_result.html', results=grading_results)
 
 
-@app.route('/run-glsa', methods=['POST'])
-def run_glsa():
-    global glsa_process, uploaded_filename
+@app.route('/glsa')
+def glsa():
+    global uploaded_filename
     
     with open(f'data/{uploaded_filename}', 'r', encoding='utf-8') as f:
         test_transcripts = json.load(f)
@@ -419,19 +402,42 @@ def run_glsa():
             'grade': transcript['grade'],
             'grade_secondary': transcript['grade_secondary']
         })  
+        
+    return render_template('glsa.html', results=grading_results)
+
+
+@app.route('/run-glsa', methods=['POST'])
+def run_glsa():
+    global glsa_process, uploaded_filename
     
     glsa_script = resource_path('glsa.py')
     python_executable = sys.executable
-    glsa_process = subprocess.Popen([python_executable, glsa_script] + [f"{item['phone_number']},{item['grade']},{item['grade_secondary']}" for item in grading_results]  )
+    glsa_process = subprocess.Popen([python_executable, glsa_script, uploaded_filename], 
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    text=True)
     return jsonify({"success": True})
+
+@app.route('/continue-glsa', methods=['POST'])
+def continue_glsa():
+    global glsa_process
+    if glsa_process and glsa_process.stdin:
+        glsa_process.stdin.write('\n')
+        glsa_process.stdin.flush()
+        return jsonify({"success": True})
+    return jsonify({"error": "No active GLSA process"}), 400
+
 
 @app.route('/stop-glsa', methods=['POST'])
 def stop_glsa():
     global glsa_process
     if glsa_process:
-        glsa_process.terminate()
+        glsa_process.kill()
+        glsa_process.wait()
         glsa_process = None
-    return jsonify({"success": True})
+    return jsonify({"success": True, "message": "Grading process stopped"})
+
 
 
 
@@ -471,6 +477,7 @@ def graded_result_test():
     return render_template('grade_result.html', results=results)
 
 
+# import webbrowser
 # def open_browser():
 #     """Wait a second and then open the browser"""
 #     time.sleep(1)  # Give the server a second to start

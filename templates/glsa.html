@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="../static/index.css">
         <link rel="stylesheet" type="text/css" href="../static/glsa.css">
         <!--<link rel="stylesheet" type="text/css" href="../static/loading.css">-->
-        <title>Agent</title>
+        <title>GLSA</title>
     </head>
 
     <body>
@@ -19,40 +19,53 @@
         </nav>
     
         <div id="main-content">
-            <!-- <h1><center>GoogleLSA Browser Agent</center></h1> -->
-            
-            <div id="controls">
-                <button id="start-btn" onclick="startGLSA()">Start Browser Agent</button>
-                <button id="stop-btn" onclick="stopGLSA()" disabled>Stop</button>
+            <br><br>
+            <!-- Initial Login State -->
+            <div id="login-state" class="loading-state">
+                <center>
+                    <h3><span id="status-message" class="typing-animation">Hold on, Let's get you logged into GLSA...</span></h3>
+                    <p id="account-selector-message">Hit continue once the account selector is visible</p>
+                    
+                    <!-- Continue Button -->
+                    <div id="continue-form">
+                        <button id="continue-btn" class="action-button" onclick="continueToGrading()">Continue</button>
+                    </div>
+
+                    <!-- Cancel Button (Hidden by default) -->
+                    <div id="cancel-form" style="display: none; margin-top: 20px;">
+                        <button id="cancel-btn" class="action-button" style="background-color: #dc3545; font-size: 18px; padding: 12px 24px;" onclick="cancelGrading()">Cancel Grading</button>
+                    </div>
+
+                    <!-- Loading Animation -->
+                    <div id="container">
+                        <div id="bot">
+                            <div id="eyes">
+                                <div class="eye" id="left"></div>
+                                <div class="eye" id="right"></div>
+                            </div>
+                            <div id="leftarm">
+                                <div class="finger"></div>
+                                <div class="finger"></div>
+                            </div>
+                            <div id="rightarm">
+                                <div class="finger"></div>
+                                <div class="finger"></div>
+                            </div>
+                        </div>
+                        <div id="neck"></div>
+                        <div id="body"></div>
+                        <div id="legs">
+                            <div class="foot" id="left"></div>
+                            <div class="foot" id="right"></div>
+                        </div>
+                    </div>
+                </center>
             </div>
 
-            <div id="robot-container">
-                <div id="container">
-                    <div id="bot">
-                        <div id="eyes">
-                            <div class="eye" id="left"></div>
-                            <div class="eye" id="right"></div>
-                        </div>
-                        <div id="leftarm">
-                            <div class="finger"></div>
-                            <div class="finger"></div>
-                        </div>
-                        <div id="rightarm">
-                            <div class="finger"></div>
-                            <div class="finger"></div>
-                        </div>
-                    </div>
-                    <div id="neck"></div>
-                    <div id="body"></div>
-                    <div id="legs">
-                        <div class="foot" id="left"></div>
-                        <div class="foot" id="right"></div>
-                    </div>
-                </div>
-                <div class="status-text">Agent is idle</div>
-                
-                {% if results %}
-                <div id="results-container">
+            <!-- Results Table -->
+            {% if results %}
+            <div id="results-container" style="margin-top: 20px;">
+                <center>
                     <table id="glsa-results-table">
                         <thead>
                             <tr>
@@ -63,7 +76,7 @@
                         </thead>
                         <tbody>
                             {% for result in results %}
-                            <tr>
+                            <tr id="row-{{ loop.index0 }}">
                                 <td>{{ result.phone_number }}</td>
                                 <td>{{ result.grade }}</td>
                                 <td>{{ result.grade_secondary }}</td>
@@ -71,40 +84,66 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                </div>
-                {% endif %}
+                </center>
             </div>
+            {% endif %}
         </div>
     
         <script>
-            async function startGLSA() {
-                document.getElementById('start-btn').disabled = true;
-                document.getElementById('stop-btn').disabled = false;
+            const statusMessage = document.getElementById('status-message');
+            const continueForm = document.getElementById('continue-form');
+            const container = document.getElementById('container');
+            const totalRows = document.querySelectorAll('#glsa-results-table tbody tr').length;
+            let currentIndex = 0;
+
+            function continueToGrading() {
+                // Hide continue button and account selector message
+                continueForm.style.display = 'none';
+                document.getElementById('account-selector-message').style.display = 'none';
+                statusMessage.innerHTML = `Grading survey for:<br>(0/${totalRows} surveys completed)`;
                 
-                // Start robot animation
-                const container = document.getElementById('container');
-                const statusText = document.querySelector('.status-text');
-                container.classList.add('active');
-                statusText.textContent = 'Agent is running...';
+                // Show cancel button
+                document.getElementById('cancel-form').style.display = 'block';
                 
-                fetch('/run-glsa', { method: 'POST' });
-            }
-    
-            function stopGLSA() {
-                fetch('/stop-glsa', { method: 'POST' })
-                    .then(() => {
-                        document.getElementById('start-btn').disabled = false;
-                        document.getElementById('stop-btn').disabled = true;
-                        
-                        // Stop robot animation
-                        const container = document.getElementById('container');
-                        const statusText = document.querySelector('.status-text');
-                        container.classList.remove('active');
-                        statusText.textContent = 'Agent is idle';
-                    });
+                // Send continue signal to subprocess
+                fetch('/continue-glsa', { 
+                    method: 'POST' 
+                }).then(() => {
+                    // Start listening for progress updates
+                    listenForProgress();
+                });
             }
 
-            //document.addEventListener('DOMContentLoaded', startGLSA);
+            function cancelGrading() {
+                fetch('/stop-glsa', { method: 'POST' }).then(() => {
+                    statusMessage.textContent = 'Grading cancelled.';
+                    document.getElementById('cancel-form').style.display = 'none';
+                    continueForm.style.display = 'block';
+                });
+            }
+
+            function listenForProgress() {
+                // Listen for real-time updates from backend
+                // This will be implemented with server-sent events or WebSockets
+                // For now, just start with initial state
+                statusMessage.innerHTML = `Grading survey for:<br>(0/${totalRows} surveys completed)`;
+            }
+
+            // Initialize and start GLSA subprocess
+            document.addEventListener('DOMContentLoaded', () => {
+                statusMessage.textContent = "Hold on, Let's get you logged into GLSA...";
+                // Start the GLSA subprocess
+                fetch('/run-glsa', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('GLSA subprocess started successfully');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error starting GLSA subprocess:', error);
+                    });
+            });
         </script>
     </body>
 </html> 

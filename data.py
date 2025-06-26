@@ -146,6 +146,29 @@ def convert_grade_secondary_to_full(grade_secondary: str) -> str:
         return grade_secondary
     
 
+def convert_grade_secondary_to_index(grade_secondary: str, sentiment: str) -> int:
+    """
+    Convert a short grade_secondary value to its index.
+    
+    Args:
+        grade_secondary (str): The short grade secondary value
+        
+    Returns:
+        int: The index of the grade secondary, -1 if not found
+    """
+    # Check if it's in the positive list
+    if grade_secondary in GRADE_SECONDARY_POS:
+        return GRADE_SECONDARY_POS.index(grade_secondary) + 1
+    
+    # Check if it's in the negative list
+    elif grade_secondary in GRADE_SECONDARY_NEG:
+        return GRADE_SECONDARY_NEG.index(grade_secondary) + 1
+    
+    # If not found in either list, return -1
+    else:
+        return -1
+    
+
 def load_charged_leads(path: str):
     # read the leads-inbox CSV file with headers, preserving empty spaces and handling trailing commas
     df = pd.read_csv(path, 
