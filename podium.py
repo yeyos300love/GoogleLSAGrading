@@ -253,27 +253,27 @@ def navigate_to_transcript(phone_nums: list, file_path: str):
         # transcript_list = [item for item in raw_transcript if len(item) > 1]       
         # filter transcript: remove "•" markers and single letter icons before names
         filtered_transcript = []
-        i = 0
-        while i < len(raw_transcript):
-            item = raw_transcript[i]
+        j = 0
+        while j < len(raw_transcript):
+            item = raw_transcript[j]
             
             if item == "•":
                 # Skip "•" markers
-                i += 1
+                j += 1
                 continue
             
             # Check if this is a single letter followed by a name (before "•")
             if (len(item) == 1 and item.isalpha() and 
-                i + 2 < len(raw_transcript) and 
-                raw_transcript[i + 2] == "•"):
+                j + 2 < len(raw_transcript) and 
+                raw_transcript[j + 2] == "•"):
                 # Skip single letter icon, keep the name that follows
-                i += 1
+                j += 1
                 filtered_transcript.append(raw_transcript[i])
             else:
                 # Keep everything else (phone numbers, timestamps, dialog text)
                 filtered_transcript.append(item)
             
-            i += 1
+            j += 1
         
         # Group data as [name, time, text]
         #transcript = [transcript_list[i:i+3] for i in range(0, len(transcript_list), 3)]
