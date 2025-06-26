@@ -268,7 +268,7 @@ def navigate_to_transcript(phone_nums: list, file_path: str):
                 raw_transcript[j + 2] == "•"):
                 # Skip single letter icon, keep the name that follows
                 j += 1
-                filtered_transcript.append(raw_transcript[i])
+                filtered_transcript.append(raw_transcript[j])
             else:
                 # Keep everything else (phone numbers, timestamps, dialog text)
                 filtered_transcript.append(item)
