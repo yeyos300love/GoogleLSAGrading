@@ -28,7 +28,7 @@ LOGIN_URL = 'https://auth.podium.com/'
 
 # setup selenium
 options = Options()
-options.add_argument("--headless")  # run without opening a browser
+#options.add_argument("--headless")  # run without opening a browser
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
@@ -198,25 +198,25 @@ def search_number(phone_num: str):
     search_box.click()
     time.sleep(1)
     search_box.send_keys(phone_num)
-    time.sleep(1)
+    time.sleep(2)
     search_box.send_keys(Keys.RETURN)
-
+    time.sleep(3)
     try:
         # select first call
-        hover_call_box = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[3]/div[2]'))
-        )
+        hover_call_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[3]/div[2]')
         hover_call_box.click()
         
         try:
             # get transcript
-            transcript_pane = WebDriverWait(driver, 20).until(
+            transcript_pane = WebDriverWait(driver, 40).until(
                 #EC.presence_of_element_located((By.XPATH, '//*[@id="app-container"]/div[5]/div/div[2]/div[2]/div/div[2]'))
                 EC.presence_of_element_located((By.XPATH, '//*[@id="app-container"]/div[5]/div/div[2]/div[2]/div/div[2]/div[2]'))
             )
             
             # store transcript text
             transcript_text = transcript_pane.text.split('\n')[2:]
+            if not transcript_text or all(not line.strip() for line in transcript_text):
+                transcript_text = ['FAILED', 'No content', 'Check call box to see why it is blank']
         except:
             transcript_text = ['FAILED', 'No transcript text', 'Ensure call box selected is the correct one']
     except:
@@ -233,6 +233,7 @@ def search_number(phone_num: str):
 def navigate_to_transcript(phone_nums: list, file_path: str):
     navigate_to_calls_page()
 
+    seen_numbers = set()
     for i, num in enumerate(phone_nums, 1):
         print(f"FETCH_PROGRESS: {i}/{len(phone_nums)}", flush=True)
 
@@ -246,8 +247,13 @@ def navigate_to_transcript(phone_nums: list, file_path: str):
         #     time.sleep(3)
         #     navigate_to_calls_page()
 
-        raw_transcript = search_number(num)
-        #print(raw_transcript)  
+        if num not in seen_numbers:
+            seen_numbers.add(num)
+            raw_transcript = search_number(num)
+            #print(raw_transcript)  
+
+        elif num in seen_numbers:
+            raw_transcript = ['WARNING', 'Duplicate customer', 'This is a duplicate lead']
 
         # # remove '•' & convo letter icon
         # transcript_list = [item for item in raw_transcript if len(item) > 1]       
@@ -277,14 +283,14 @@ def navigate_to_transcript(phone_nums: list, file_path: str):
         
         # Group data as [name, time, text]
         #transcript = [transcript_list[i:i+3] for i in range(0, len(transcript_list), 3)]
-        transcript = [filtered_transcript[i:i+3] for i in range(0, len(filtered_transcript), 3)]
-        transcript_str = "\n\n".join(f"{i[0]} • {i[1]}\n{i[2]}" for i in transcript) #string
-        #print(transcript_str)
+        transcript = [filtered_transcript[k:k+3] for k in range(0, len(filtered_transcript), 3)]
+        transcript_str = "\n\n".join(f"{element[0]} • {element[1]}\n{element[2]}" for element in transcript) #string
+        print(transcript_str)
 
-        save_progress(num, transcript_str, progress_file=file_path)
+        save_progress(num, transcript_str, progress_file=file_path, index=i)
 
 
-def save_progress(phone_num, transcript_data, progress_file):
+def save_progress(phone_num, transcript_data, progress_file, index):
     """Save individual transcript progress to file"""
     try:
         # Load existing progress
@@ -294,26 +300,32 @@ def save_progress(phone_num, transcript_data, progress_file):
         else:
             progress = []
         
-        # Find existing entry with the same customer phone number
-        existing_entry = None
-        for entry in progress:
-            if entry.get("customer") == phone_num:
-                existing_entry = entry
-                break
+
         
-        if existing_entry:
-            # Update existing entry's transcript
-            existing_entry["transcript"] = transcript_data
-        else:
-            # Create new transcript object if no existing entry found
-            transcript_obj = {
-                "customer": phone_num,
-                "transcript": transcript_data,
-                "grade": "",
-                "grade_secondary": ""
-            }
-            progress.append(transcript_obj)
-        
+        if not transcript_data.startswith('WARNING'):
+            # Find existing entry with the same customer phone number
+            existing_entry = None
+            for entry in progress:
+                if entry.get("customer") == phone_num:
+                    existing_entry = entry
+                    break
+            
+            if existing_entry:
+                # Update existing entry's transcript
+                existing_entry["transcript"] = transcript_data
+            else:
+                # Create new transcript object if no existing entry found
+                transcript_obj = {
+                    "customer": phone_num,
+                    "transcript": transcript_data,
+                    "grade": "",
+                    "grade_secondary": ""
+                }
+                progress.append(transcript_obj)
+        elif transcript_data.startswith('WARNING'):
+            #if index is not None and 0 <= index < len(progress):
+            progress[index-1]["transcript"] = transcript_data
+
         # Save updated progress
         with open(progress_file, 'w', encoding='utf-8') as f:
             json.dump(progress, f, ensure_ascii=False, indent=2)
@@ -345,10 +357,10 @@ if __name__ == '__main__':
 
     driver = create_driver()
 
-    # if not load_session():
-    #     login(LOGIN_URL)
-    #     save_session()
-    login(LOGIN_URL)
+    if not load_session():
+        login(LOGIN_URL)
+        save_session()
+    #login(LOGIN_URL)
 
     transcripts_raw = navigate_to_transcript(customer_phones_list, file_path=PATH)
 

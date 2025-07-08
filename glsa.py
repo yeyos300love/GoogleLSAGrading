@@ -278,6 +278,7 @@ if __name__ == '__main__':
 
     # Grading loop
     first_text = None
+    cnt = 0 # customer count
     
     while True:
         # Wait for element to be located and get its text
@@ -295,7 +296,8 @@ if __name__ == '__main__':
         if first_text is None:
             first_text = current_text
         # Stop if we've cycled back to the first text
-        elif current_text == first_text:
+        # Break only when all customers have been graded
+        elif current_text == first_text and cnt+1 == total_json_customers:
             print(f"Cycled back to {current_text}")
             break
             
@@ -310,6 +312,7 @@ if __name__ == '__main__':
         
         # perform grading
         grade_call(current_text, grade, grade_secondary)
+        cnt += 1
         print(f"GRADING_COMPLETE:{current_text}")
         
         # Wait for back button and click
