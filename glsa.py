@@ -41,7 +41,7 @@ def create_driver():
         if 'REPL_ID' in os.environ:
             replit_options = webdriver.ChromeOptions()
             replit_options.add_argument('--no-sandbox')
-            replit_options.add_argument('--headless')
+            #replit_options.add_argument('--headless')
             replit_options.add_argument('--disable-dev-shm-usage')
             replit_options.add_argument('--window-size=1920,1080')  # Add window size
             replit_options.add_argument('--start-maximized')  # Add maximize

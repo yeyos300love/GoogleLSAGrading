@@ -126,6 +126,7 @@
                     
                     // Escape quotes for CSV format
                     transcript = transcript.replace(/"/g, '""');
+                    transcript = transcript.replace(/•/g, '-');
                     
                     csv += `"${customer}","${grade}","${gradeSecondary}","${transcript}"\n`;
                 });
@@ -159,8 +160,12 @@
                     const gradeDropdown = document.createElement('select');
                     gradeDropdown.className = 'grade-dropdown';
                     
-                    // Add placeholder option if it's a failed transcript
-                    if (row.transcript?.trim().startsWith('FAILED')) {
+                    // Check if it's a failed transcript or invalid grade
+                    const isFailedTranscript = row.transcript?.trim().startsWith('FAILED');
+                    const isInvalidGrade = row.grade && !gradeOptions.includes(row.grade);
+                    
+                    // Add placeholder option if it's a failed transcript or invalid grade
+                    if (isFailedTranscript || isInvalidGrade) {
                         const placeholderOption = document.createElement('option');
                         placeholderOption.value = "";
                         placeholderOption.textContent = "Select Grade";
@@ -175,7 +180,7 @@
                         const optionElement = document.createElement('option');
                         optionElement.value = option;
                         optionElement.textContent = option;
-                        if (option === row.grade && !row.transcript?.trim().startsWith('FAILED')) {
+                        if (option === row.grade && !isFailedTranscript && !isInvalidGrade) {
                             optionElement.selected = true;
                         }
                         gradeDropdown.appendChild(optionElement);

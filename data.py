@@ -97,30 +97,6 @@ except Exception as e:
         print(f"Error reading secrets: {str(e)}")
 
 
-
-
-# preprocess data returned from llm calls
-def clean_response(response:str) -> tuple:
-    """
-    Args:
-        input_string (str): "<grade - grade_secondary>"
-        
-    Returns:
-        tuple: (grade, grade_secondary)
-    """
-    cleaned = response.strip()[1:-1].strip() # remove the angle brackets
-    parts = cleaned.split(" - ") # split by the delimiter " - "
-    
-    if len(parts) >= 2:
-        grade, grade_secondary = parts[0].strip(), parts[1].strip()
-    else: # if response = <Not confident>  
-        grade, grade_secondary = cleaned, ""
-        
-    if grade_secondary == 'Wrong Number': grade_secondary = 'Service not offered'
-
-    return grade, grade_secondary
-
-
 def convert_grade_secondary_to_full(grade_secondary: str) -> str:
     """
     Convert a short grade_secondary value to its full description.

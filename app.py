@@ -9,7 +9,7 @@ import time
 import random
 from datetime import datetime
 
-from data import load_customer_data, clean_response
+from data import load_customer_data
 from data import Customer, Customers, TwoFactCode
 from data import GRADES, GRADE_SECONDARY_POS, GRADE_SECONDARY_NEG, PHONES_EXAMPLES #phone_nums_example
 from llm import sentiment_analysis
@@ -300,6 +300,9 @@ def fetch_transcripts_stream():
 
 @app.route('/grade-transcripts', methods=['POST'])
 def grade_transcripts():
+    return Response(stream_with_context(grade_transcripts_stream()), mimetype='text/event-stream')
+
+def grade_transcripts_stream():
     global uploaded_filename
 
     phone_nums = customers.get_customers()
@@ -307,48 +310,48 @@ def grade_transcripts():
     
     total_count = customers.get_len_customers()
 
-    def generate():
-        grades = []
-        grades_secondary = []
+    grades = []
+    grades_secondary = []
+    
+    # Load transcripts from JSON file
+    file_path = f'data/{uploaded_filename}'
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    for i in range(total_count):
+        # Send progress update
+        #yield f"PROGRESS:{i+1}/{total_count}\n"
+        print(f"PROGRESS:{i+1}/{total_count} - {phone_nums[i]}")
+        yield f"data: {json.dumps({'type': 'grading_progress', 'current': i+1, 'total': total_count})}\n\n"
         
-        # Load transcripts from JSON file
-        file_path = f'data/{uploaded_filename}'
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        # Find transcript for this phone number
+        transcript = ""
+        for entry in data:
+            if entry.get("customer") == phone_nums[i]:
+                transcript = entry.get("transcript", "")
+                break
         
-        for i in range(total_count):
-            # Send progress update
-            yield f"PROGRESS:{i+1}/{total_count}\n"
-            
-            # Find transcript for this phone number
-            transcript = ""
-            for entry in data:
-                if entry.get("customer") == phone_nums[i]:
-                    transcript = entry.get("transcript", "")
-                    break
-            
-            if not transcript.startswith('FAILED'):
-                # grade = random.choice(GRADES)
-                # grade_secondary = "" #random.choice(["Booked", "Spam"])
-                # # simulate grade time
-                # time.sleep(0.5)
-                grade, grade_secondary = clean_response(sentiment_analysis(transcript))
-            else:
-                grade = ""
-                grade_secondary = ""
+        if not transcript.startswith('FAILED'):
+            # grade = random.choice(GRADES)
+            # grade_secondary = "" #random.choice(["Booked", "Spam"])
+            # # simulate grade time
+            # time.sleep(0.5)
+            grade, grade_secondary = sentiment_analysis(transcript)
+        else:
+            grade = ""
+            grade_secondary = ""
 
-            #print(grade, grade_secondary)
+        print(grade, grade_secondary)
 
-            grades.append(grade)
-            grades_secondary.append(grade_secondary)
+        grades.append(grade)
+        grades_secondary.append(grade_secondary)
 
-        # Update the uploaded JSON file with grades
-        update_grades_in_file(phone_nums, grades, grades_secondary)
+    # Update the uploaded JSON file with grades
+    update_grades_in_file(phone_nums, grades, grades_secondary)
 
-        # Send completion signal
-        yield "DONE\n"
-
-    return Response(generate(), mimetype='text/plain')
+    # Send completion signal
+    yield "DONE\n"
+    yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
 
 @app.route('/transcript-result')

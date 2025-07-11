@@ -28,7 +28,7 @@ LOGIN_URL = 'https://auth.podium.com/'
 
 # setup selenium
 options = Options()
-#options.add_argument("--headless")  # run without opening a browser
+options.add_argument("--headless")  # run without opening a browser
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
@@ -198,9 +198,9 @@ def search_number(phone_num: str):
     search_box.click()
     time.sleep(1)
     search_box.send_keys(phone_num)
-    time.sleep(2)
-    search_box.send_keys(Keys.RETURN)
     time.sleep(3)
+    search_box.send_keys(Keys.RETURN)
+    time.sleep(4)
     try:
         # select first call
         hover_call_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[3]/div[2]')
@@ -285,7 +285,7 @@ def navigate_to_transcript(phone_nums: list, file_path: str):
         #transcript = [transcript_list[i:i+3] for i in range(0, len(transcript_list), 3)]
         transcript = [filtered_transcript[k:k+3] for k in range(0, len(filtered_transcript), 3)]
         transcript_str = "\n\n".join(f"{element[0]} • {element[1]}\n{element[2]}" for element in transcript) #string
-        print(transcript_str)
+        #print(transcript_str)
 
         save_progress(num, transcript_str, progress_file=file_path, index=i)
 

@@ -3,6 +3,29 @@ from data import OPENAI_API_KEY
 
 api_key = OPENAI_API_KEY
 
+
+# preprocess data returned from llm calls
+def clean_response(response:str) -> tuple:
+    """
+    Args:
+        input_string (str): "<grade - grade_secondary>"
+        
+    Returns:
+        tuple: (grade, grade_secondary)
+    """
+    cleaned = response.strip()[1:-1].strip() # remove the angle brackets
+    parts = cleaned.split(" - ") # split by the delimiter " - "
+    
+    if len(parts) >= 2:
+        grade, grade_secondary = parts[0].strip(), parts[1].strip()
+    else: # if response = <Not confident>  
+        grade, grade_secondary = cleaned, ""
+        
+    if grade_secondary == 'Wrong Number': grade_secondary = 'Service not offered'
+
+    return grade, grade_secondary
+
+
 def sentiment_analysis(transcript: str) -> tuple:
 
     prompt = f'''
@@ -89,7 +112,7 @@ def sentiment_analysis(transcript: str) -> tuple:
         {transcript}'''
 
     # Initialize the client
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, timeout=120.0)
     
     response = client.chat.completions.create(
         model="o3-mini", #"gpt-3.5-turbo", #"o3-mini-2025-01-31",
@@ -110,20 +133,20 @@ def sentiment_analysis(transcript: str) -> tuple:
     #output_list = output.split(",")
     #grade = output_list[0]
     #grade_secondary = output_list[1]
-    return output
+    return clean_response(output)
 
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    # test = '''
-    # (971) 998-9211 • 0:00
-    # The person you're trying to reach is not available. At the tone, please record your message. When you have finished recording you may hang up.
+#     test = '''
+#     (971) 998-9211 • 0:00
+#     The person you're trying to reach is not available. At the tone, please record your message. When you have finished recording you may hang up.
 
-    # Krystal • 0:08
-    # Hi, this is Crystal with Advantage Heating and Electrical. This message is for Claudia. I was calling to confirm your appointment with us for tomorrow with an arrival window of 120 p.m. to 3 p.m. If you need to cancel or reschedule this, please give us a call back at 503-393-5315. Otherwise we look forward to seeing you tomorrow between 12 and 30 p.m. Thank you so much and have a great day.
-    # '''
+#     Krystal • 0:08
+#     Hi, this is Crystal with Advantage Heating and Electrical. This message is for Claudia. I was calling to confirm your appointment with us for tomorrow with an arrival window of 120 p.m. to 3 p.m. If you need to cancel or reschedule this, please give us a call back at 503-393-5315. Otherwise we look forward to seeing you tomorrow between 12 and 30 p.m. Thank you so much and have a great day.
+#     '''
 
-    # d=sentiment_analysis(test)
-    # print(d)
+#     d=sentiment_analysis(test)
+#     print(d)
 
     # test_transcripts = 
 
