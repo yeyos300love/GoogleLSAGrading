@@ -11,8 +11,7 @@
         <nav class="top-nav">
             <div class="nav-items">
                 <a href="/home" class="nav-item">Home</a>
-                <a href="/transcripts" class="nav-item">Fetched Transcripts</a>
-                <a href="/graded" class="nav-item">Graded Transcripts</a>
+                <a href="/index" class="nav-item">Podium (Home)</a>
             </div>
         </nav>
 
@@ -163,9 +162,10 @@
                     // Check if it's a failed transcript or invalid grade
                     const isFailedTranscript = row.transcript?.trim().startsWith('FAILED');
                     const isInvalidGrade = row.grade && !gradeOptions.includes(row.grade);
+                    const fromCSV = new URLSearchParams(window.location.search).get('from_csv') === 'true';
                     
-                    // Add placeholder option if it's a failed transcript or invalid grade
-                    if (isFailedTranscript || isInvalidGrade) {
+                    // Add placeholder option if it's a failed transcript or invalid grade (but not if coming from CSV)
+                    if ((isFailedTranscript && !fromCSV) || isInvalidGrade) {
                         const placeholderOption = document.createElement('option');
                         placeholderOption.value = "";
                         placeholderOption.textContent = "Select Grade";
@@ -180,7 +180,7 @@
                         const optionElement = document.createElement('option');
                         optionElement.value = option;
                         optionElement.textContent = option;
-                        if (option === row.grade && !isFailedTranscript && !isInvalidGrade) {
+                        if (option === row.grade && (!(isFailedTranscript && !fromCSV)) && !isInvalidGrade) {
                             optionElement.selected = true;
                         }
                         gradeDropdown.appendChild(optionElement);
@@ -245,8 +245,9 @@
                     const dropdown = document.createElement('select');
                     dropdown.className = 'grade-dropdown';
                     
-                    // Add placeholder option for failed transcripts
-                    if (row.querySelector('.view-transcript-btn').classList.contains('failure')) {
+                    // Add placeholder option for failed transcripts (but not if coming from CSV)
+                    const fromCSV = new URLSearchParams(window.location.search).get('from_csv') === 'true';
+                    if (row.querySelector('.view-transcript-btn').classList.contains('failure') && !fromCSV) {
                         const placeholderOption = document.createElement('option');
                         placeholderOption.value = "";
                         placeholderOption.textContent = "Select Secondary Grade";
@@ -260,7 +261,7 @@
                         const optionElement = document.createElement('option');
                         optionElement.value = option;
                         optionElement.textContent = option;
-                        if (option === currentValue && !row.querySelector('.view-transcript-btn').classList.contains('failure')) {
+                        if (option === currentValue && (!(row.querySelector('.view-transcript-btn').classList.contains('failure') && !fromCSV))) {
                             optionElement.selected = true;
                         }
                         dropdown.appendChild(optionElement);

@@ -11,78 +11,60 @@
         <nav class="top-nav">
             <div class="nav-items">
                 <a href="/home" class="nav-item">Home</a>
+                <!--
                 <a href="/transcripts" class="nav-item">Fetched Transcripts</a>
                 <a href="/graded" class="nav-item">Graded Transcripts</a>
+                -->
             </div>
         </nav>
 
         <div id="main-content">
-            <h1><center>Google LSA Grading</center></h1>
+            <h1><center>Google LSA Grading (Podium)</center></h1>
             
-            <!-- Initial state -->
             <div id="initial-state">
                 <center>
+                    <p>Upload CSV options</p>
+        
                     <div class="button-group">
                         <input type="file" id="csvFileInput" accept=".csv" style="display: none">
-                        <button onclick="document.getElementById('csvFileInput').click()" class="upload-btn">Upload CSV</button>
+                        <div class="tooltip-container">
+                            <button onclick="document.getElementById('csvFileInput').click()" class="upload-btn">Initial Data</button>
+                            <div class="tooltip">Fetching & Grading (Podium), & Form Completion (GLSA)</div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="button-group">
+                        <input type="file" id="csvFileInput2" accept=".csv" style="display: none">
+                        <div class="tooltip-container">
+                            <button onclick="document.getElementById('csvFileInput2').click()" class="upload-btn">Graded Data</button>
+                            <div class="tooltip">GLSA Form Completion</div>
+                        </div>
                     </div>
                 </center>
             </div>
-
-        <!-- Load loading states -->
-        <iframe id="loading-frame" src="/loading" style="display: none; border: none; width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000;"></iframe>
+        </div>
 
         <script>
-            // Constants
-            const initialState = document.getElementById('initial-state');
-            const loadingFrame = document.getElementById('loading-frame');
-            const resultsState = document.getElementById('results-state');
-            const modal = document.getElementById('transcriptModal');
-            const modalOverlay = document.querySelector('.modal-overlay');
-            const closeBtn = document.querySelector('.close');
-            const transcriptText = document.getElementById('transcriptText');
-            const testDataIndicator = document.querySelector('.test-data-container');
-
-            // State management functions
-            function showState(stateElement) {
-                // Hide initial state
-                initialState.style.display = "none";
-                
-                // Show loading frame
-                if (stateElement === 'loading') {
-                    loadingFrame.style.display = "block";
-                }
-            }
-
             // Handle CSV file upload
             const csvFileInput = document.getElementById('csvFileInput');
             csvFileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
-                if (!file) {
-                    console.error('No file selected');
-                    return;
-                }
+                if (!file) return;
 
                 const formData = new FormData();
                 formData.append('file', file);
 
                 console.log('Uploading CSV file...', file.name);
 
-                // First upload the CSV
+                // Upload the CSV
                 fetch('/upload-csv', {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     console.log('Upload response:', data);
                     if (data.success) {
-                        showState('loading');
                         return fetch('/run-script', {
                             method: 'POST',
                             headers: {
@@ -97,98 +79,40 @@
                 .then(data => {
                     console.log('Run script response:', data);
                     if (data.needs_2fa) {
-                        loadingFrame.contentWindow.postMessage('show_2fa', '*');
+                        window.location.href = '/loading?show_2fa=true';
                     }
                 })
                 .catch(error => {
                     console.error('Upload/Run Error:', error);
-                    loadingFrame.contentWindow.postMessage('show_error', '*');
+                    alert('Error: ' + error.message);
                 });
             });
 
-            // Listen for messages from the loading frame
-            window.addEventListener('message', function(event) {
-                if (event.data === 'back_to_main') {
-                    loadingFrame.style.display = "none";
-                    initialState.style.display = "block";
-                } else if (event.data.type === '2fa_submit') {
-                    // Show fetch transcripts message
-                    loadingFrame.contentWindow.postMessage('fetch_transcripts', '*');
-                    
-                    // Handle 2FA code submission
-                    fetch('/fetch-transcripts', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ code: event.data.code })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.text();  // Get HTML response
-                    })
-                    .then(html => {
-                        // Navigate to the transcript results page
-                        document.open();
-                        document.write(html);
-                        document.close();
-                    })
-                    .catch(() => {
-                        loadingFrame.contentWindow.postMessage('show_error', '*');
-                    });
-                }
-            });
+            // Handle graded CSV file upload
+            const csvFileInput2 = document.getElementById('csvFileInput2');
+            csvFileInput2.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
 
-            // Initialize page
-            document.addEventListener('DOMContentLoaded', () => {
-                // Check for results in sessionStorage first
-                const storedResults = sessionStorage.getItem('grading_results');
-                if (storedResults) {
-                    try {
-                        const resultsData = JSON.parse(storedResults);
-                        initialState.style.display = 'none';
-                        resultsState.style.display = 'block';
-                        showResults(resultsData);
-                        // Clear the results from sessionStorage after displaying
-                        sessionStorage.removeItem('grading_results');
-                    } catch (error) {
-                        console.error('Error parsing stored results:', error);
-                        // Show initial state if there's an error
-                        initialState.style.display = 'block';
-                        resultsState.style.display = 'none';
-                    }
-                } else {
-                    // No stored results, show initial state
-                    initialState.style.display = 'block';
-                    resultsState.style.display = 'none';
-                }
+                console.log('Uploading graded CSV file...', file.name);
 
-                // Load grade options
-                fetch('/options')
-                    .then(response => response.json())
-                    .then(options => {
-                        window.gradeOptions = options;
-                    })
-                    .catch(error => console.error('Error loading options:', error));
-
-                // Set up event listeners
-                document.querySelector('.close')?.addEventListener('click', closeTranscript);
-            });
-
-            // Helper function to get previous month and year
-            function getPreviousMonthYear() {
-                const date = new Date();
-                date.setMonth(date.getMonth() - 1);
+                // Create and submit form directly
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/graded-csv-to-app';
+                form.enctype = 'multipart/form-data';
                 
-                const months = [
-                    'January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'
-                ];
+                // Create file input
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.name = 'file';
+                fileInput.files = event.target.files;
+                form.appendChild(fileInput);
                 
-                return `${months[date.getMonth()]} ${date.getFullYear()}`;
-            }
+                // Add form to body and submit
+                document.body.appendChild(form);
+                form.submit();
+            });
         </script>
     </body>
 </html>

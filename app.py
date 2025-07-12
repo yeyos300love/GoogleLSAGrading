@@ -89,15 +89,23 @@ app = Flask(__name__,
            template_folder=resource_path('templates'),
            static_folder=resource_path('static')) # initialize app
 
-@app.route('/')
-
+#@app.route('/') # default route
 @app.route('/home')
 def home():
+    return render_template('home.html')
+
+@app.route('/') # default route
+@app.route('/index')
+def index():
     return render_template('index.html')
 
 @app.route('/loading')
 def loading():
     return render_template('loading.html')
+
+@app.route('/glsa-solo')
+def glsa_solo():
+    return render_template('glsa_solo.html')
 
 @app.route('/transcripts')
 def transcripts():
@@ -387,6 +395,85 @@ def grade_result():
             'grade_secondary': transcript['grade_secondary']
         })  
     return render_template('grade_result.html', results=grading_results)
+
+
+@app.route('/graded-csv-to-app', methods=['POST'])
+def graded_csv_to_app():
+    if 'file' not in request.files:
+        return redirect('/index?error=No file provided')
+    
+    file = request.files['file']
+    if file.filename == '':
+        return redirect('/index?error=No file selected')
+    
+    if not file.filename.endswith('.csv'):
+        return redirect('/index?error=File must be a CSV')
+    
+    try:
+        # Create a temporary file
+        temp_dir = tempfile.mkdtemp()
+        temp_path = os.path.join(temp_dir, 'uploaded.csv')
+        
+        # Save the uploaded file
+        file.save(temp_path)
+        
+        # Read CSV with pandas or manually parse it
+        import csv
+        customers_data = []
+        
+        with open(temp_path, 'r', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                customer = row.get('Customer', '').strip()
+                grade = row.get('Grade', '').strip()
+                grade_secondary = row.get('Secondary Grade', '').strip()
+                transcript = row.get('Transcript', '').strip()
+                
+                if customer:  # Only add if customer is not empty
+                    customers_data.append({
+                        'customer': customer,
+                        'grade': grade,
+                        'grade_secondary': grade_secondary,
+                        'transcript': transcript
+                    })
+        
+        # Create data directory if it doesn't exist
+        os.makedirs('data', exist_ok=True)
+        
+        # Create JSON file with uploaded customer data
+        current_date = datetime.now()
+        date_str = current_date.strftime("%d%b%Y")
+        json_filename = f"uploaded_{date_str}.json"
+        json_filepath = os.path.join('data', json_filename)
+        
+        global uploaded_filename
+        uploaded_filename = json_filename
+        
+        # Clear existing customers and add new ones
+        customers.customers = []
+        for data in customers_data:
+            customers.add_customer(data['customer'])
+        
+        # Save to JSON file with all the graded data
+        with open(json_filepath, 'w', encoding='utf-8') as f:
+            json.dump(customers_data, f, indent=2)
+        
+        # Clean up: remove temporary file and directory
+        os.remove(temp_path)
+        os.rmdir(temp_dir)
+        
+        if not customers_data:
+            return redirect('/index?error=No customer data found in CSV')
+        
+        return redirect('/grade-result?from_csv=true')
+        
+    except Exception as e:
+        # Ensure cleanup happens even if there's an error
+        if 'temp_path' in locals() and os.path.exists(temp_path):
+            os.remove(temp_path)
+        if 'temp_dir' in locals() and os.path.exists(temp_dir):
+            os.rmdir(temp_dir)
+        return redirect(f'/index?error={str(e)}')
 
 
 @app.route('/glsa')

@@ -12,8 +12,7 @@
         <nav class="top-nav">
             <div class="nav-items">
                 <a href="/home" class="nav-item">Home</a>
-                <a href="/transcripts" class="nav-item">Fetched Transcripts</a>
-                <a href="/graded" class="nav-item">Graded Transcripts</a>
+                <a href="/index" class="nav-item">Podium (Home)</a>
             </div>
         </nav>
 
@@ -68,9 +67,14 @@
             window.addEventListener('DOMContentLoaded', function() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const action = urlParams.get('action');
+                const show2fa = urlParams.get('show_2fa');
                 
                 if (action === 'grade') {
                     startGrading();
+                } else if (show2fa === 'true') {
+                    statusMessage.textContent = "Hold on, let's get you logged into Podium...";
+                    twoFactorForm.style.display = 'block';
+                    container.style.display = 'none';
                 }
             });
 
