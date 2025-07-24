@@ -134,6 +134,21 @@ html, body {
     background-color: #ff6666;  /* Lighter red on hover */
 }
 
+/* Add active state for when transcript is being viewed */
+.view-transcript-btn.active {
+    background-color: #2d5a2f;  /* Darker green */
+    outline: 2px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.view-transcript-btn.failure.active {
+    background-color: #cc2222;  /* Darker red */
+    outline: 2px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
 #output {
     flex: 1;
     width: 100%;

@@ -78,6 +78,14 @@
                 const transcriptText = document.getElementById('transcriptText');
 
                 function showTranscript(transcript, phoneNumber) {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.view-transcript-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to the clicked button
+                    event.target.classList.add('active');
+                    
                     // Replace literal \n with actual newlines
                     const formattedTranscript = transcript.replace(/\\n/g, '\n').replace(/\\'/g, "'");
                     transcriptText.textContent = formattedTranscript;
@@ -89,6 +97,11 @@
                 }
 
                 function closeTranscript() {
+                    // Remove active class from all buttons when closing
+                    document.querySelectorAll('.view-transcript-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
                     modal.classList.remove('show');
                     document.getElementById('main-content').classList.remove('shift');
                 }

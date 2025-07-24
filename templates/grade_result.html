@@ -70,6 +70,14 @@
 
             // Modal functions
             function showTranscript(transcript, phoneNumber) {
+                // Remove active class from all buttons
+                document.querySelectorAll('.view-transcript-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to the clicked button
+                event.target.classList.add('active');
+                
                 const formattedTranscript = transcript.replace(/\\n/g, '\n').replace(/\\'/g, "'");
                 transcriptText.textContent = formattedTranscript;
                 const isFailure = transcript.trim().startsWith('FAILED');
@@ -80,6 +88,11 @@
             }
 
             function closeTranscript() {
+                // Remove active class from all buttons when closing
+                document.querySelectorAll('.view-transcript-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
                 modal.classList.remove('show');
                 document.getElementById('main-content').classList.remove('shift');
             }
