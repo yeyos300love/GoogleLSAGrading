@@ -3,6 +3,17 @@
     margin: 20px 0;
 }
 
+#glsa-main-content {
+    width: 100%;
+    height: calc(100vh - 60px);
+    margin-top: 60px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding-right: 0;
+    margin-right: 0;
+}
+
 button {
     padding: 10px 20px;
     margin: 0 10px;

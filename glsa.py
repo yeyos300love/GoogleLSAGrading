@@ -6,10 +6,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+
+from langchain_openai import ChatOpenAI
+from browser_use import Agent, BrowserSession
+from dotenv import load_dotenv
+load_dotenv()
+
+import asyncio
 import sys
 import os
 import time
 import json
+
 from data import USERNAME, PASSWORD
 from data import convert_grade_secondary_to_index#, convert_grade_secondary_to_full
 
@@ -30,6 +38,7 @@ options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--window-size=1920,1080")  # Set a specific window size
 options.add_argument("--start-maximized")
 #options.add_experimental_option("detach", True)
+options.add_argument("--remote-debugging-port=8080")
 
 
 def create_driver():
@@ -45,6 +54,7 @@ def create_driver():
             replit_options.add_argument('--disable-dev-shm-usage')
             replit_options.add_argument('--window-size=1920,1080')  # Add window size
             replit_options.add_argument('--start-maximized')  # Add maximize
+            replit_options.add_argument("--remote-debugging-port=9223")
             
             # Use environment variables set in replit.nix
             chrome_binary = os.getenv('CHROME_BIN', '/usr/bin/chromium')
@@ -147,6 +157,7 @@ def grade_call(customer, grade, grade_secondary_short):
     else:
         raise ValueError(f"Invalid grade: {grade}")
 
+
 def login(url: str):
     driver.get(url)
 
@@ -188,13 +199,67 @@ def get_final_index(n: int) -> int:
     return 20 if remainder == 0 else remainder
 
 
+async def run_agent():
+    """Run the browser-use agent"""
+    llm = ChatOpenAI(model="gpt-4.1")
+
+    prompt = f'''
+    1. You are setting the custom date range from {start_date} to {end_date}. The calendar popup is already open
+    2. Set start date first to: {start_date} by:
+        - Set correct month, use pagnation buttons of calendar popup to navigate to the correct month if necessary.
+        - Click on the correct day
+    3. Next, set end date to: {end_date} by:
+        - Set correct month, use pagnation buttons of calendar popup to navigate to the correct month if necessary.
+        - Click on the correct day
+    4. Select "APPLY" on the bottom right of the calendar popup
+    5. STOP ALL ACTIONS
+    '''
+    
+    # Configure browser session to connect to existing browser
+    if 'REPL_ID' in os.environ:
+        os.environ['CHROMIUM_FLAGS'] = '--no-sandbox --disable-setuid-sandbox --disable-seccomp-filter-sandbox'
+        browser_session = BrowserSession(
+            headless=False,
+            debug_port=9223,
+            cdp_url="http://localhost:9223",
+            connect_to_existing_browser=True,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox", 
+                "--disable-seccomp-filter-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--remote-debugging-port=9223",
+                "--display=:0"
+            ],
+            executable_path=os.getenv('CHROME_BIN', '/nix/store/*/chromium/bin/chromium')
+        )
+
+    agent = Agent(
+        task=prompt,
+        llm=llm,
+        browser_session=browser_session
+    )
+
+    result = await agent.run()
+    return result
+
+
 
 
 if __name__ == '__main__':
+    args = sys.argv[1:]
+    
+    json_file = args[0]
+    start_date = args[1]
+    end_date = args[2]
 
-    json_file = sys.argv[1:][0]
-    #PATH = os.path.join(os.path.dirname(__file__), 'data', json_file)
-    PATH = os.path.join(os.path.dirname(__file__), 'sample_data', json_file)
+    #print(f"start_date: {start_date}", flush=True)
+    #print(f"end_date: {end_date}", flush=True)
+    #print(f"json_file: {json_file}", flush=True)
+
+    PATH = os.path.join(os.path.dirname(__file__), 'data', json_file)
+    #PATH = os.path.join(os.path.dirname(__file__), 'sample_data', json_file)
 
     # Load existing progress
     if os.path.exists(PATH):
@@ -202,7 +267,6 @@ if __name__ == '__main__':
             customer_data = json.load(f)
     
     
-
 
     driver = create_driver()
     #driver.minimize_window()
@@ -234,13 +298,20 @@ if __name__ == '__main__':
     phone_leads = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/div[3]/div[2]/div[2]/span')
     phone_leads.click()
     time.sleep(1)
-    # filter calls table by last month
+    # filter calls table
     time_dropdown = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/span/div/div[1]/div/div[1]/div/span/span')
     time_dropdown.click()
     time.sleep(1)
-    last_month_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div[2]/div/div/span[4]')
-    last_month_option.click()
-    time.sleep(1)
+    # filter calls table by last month
+    if start_date == end_date:
+        last_month_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div[2]/div/div/span[4]')
+        last_month_option.click()
+        time.sleep(1)
+        # filter calls table by custom range
+    elif start_date != end_date:
+        custom_range_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div[2]/div/div/span[7]')
+        custom_range_option.click()
+        result = asyncio.run(run_agent())
 
     # Navigate through all pages
     while True:
@@ -322,6 +393,7 @@ if __name__ == '__main__':
 
     # close browser session
     driver.quit()
+    
 
 
 # audio tag when customer phone is clicked

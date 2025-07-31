@@ -7,15 +7,16 @@ import sys
 import tempfile
 import time
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from data import load_customer_data
-from data import Customer, Customers, TwoFactCode
+from data import Customer, Customers, TwoFactCode, DateRange
 from data import GRADES, GRADE_SECONDARY_POS, GRADE_SECONDARY_NEG, PHONES_EXAMPLES #phone_nums_example
 from llm import sentiment_analysis
     
 # initialize the temporary code & subprocesses
 two_fact_code = TwoFactCode('000000')
+date_range = DateRange(None, None)
 active_process = None
 glsa_process = None
 uploaded_filename = None
@@ -106,6 +107,10 @@ def loading():
 @app.route('/glsa-solo')
 def glsa_solo():
     return render_template('glsa_solo.html')
+
+@app.route('/glsa-date-range')
+def glsa_date_range():
+    return render_template('glsa_date.html')
 
 @app.route('/transcripts')
 def transcripts():
@@ -492,17 +497,37 @@ def glsa():
             'grade': transcript['grade'],
             'grade_secondary': transcript['grade_secondary']
         })  
-        
-    return render_template('glsa.html', results=grading_results)
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if start_date and end_date:
+        date_range.set_start(start_date)
+        date_range.set_end(end_date)
+        return render_template('glsa.html', results=grading_results, start_date=start_date, end_date=end_date)
+    # Select last month
+    # sets start & end date to last month e.g., start_date = June, end_date = June
+    elif start_date == None and end_date == None:
+        last_month = (datetime.now().replace(day=1) - timedelta(days=1)).strftime('%B')
+        date_range.set_start(last_month)
+        date_range.set_end(last_month)
+        return render_template('glsa.html', results=grading_results, date_range=last_month)
+
+    
 
 
 @app.route('/run-glsa', methods=['POST'])
 def run_glsa():
     global glsa_process, uploaded_filename
+
+    start_date = date_range.get_start()
+    end_date = date_range.get_end()
+    print(f'Start Date: {start_date}')
+    print(f'End Date: {end_date}')
     
     glsa_script = resource_path('glsa.py')
     python_executable = sys.executable
-    glsa_process = subprocess.Popen([python_executable, glsa_script, uploaded_filename], 
+    glsa_process = subprocess.Popen([python_executable, glsa_script, uploaded_filename, start_date, end_date], 
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,

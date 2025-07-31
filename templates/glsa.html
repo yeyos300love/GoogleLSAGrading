@@ -17,7 +17,7 @@
             </div>
         </nav>
     
-        <div id="main-content">
+        <div id="glsa-main-content">
             <br><br>
             <!-- Initial Login State -->
             <div id="login-state" class="loading-state">
@@ -61,6 +61,18 @@
                 </center>
             </div>
 
+            {% if start_date and end_date %}
+            <div id="date-range-container" style="text-align: center;">
+                <p>Date Range: Start ({{ start_date }}) - End ({{ end_date }})</p>
+            </div>
+            {% endif %}
+
+            {% if date_range %}
+            <div id="date-range-container" style="text-align: center;">
+                <p>Date Range: {{ date_range }}</p>
+            </div>
+            {% endif %}
+            
             <!-- Results Table -->
             {% if results %}
             <div id="results-container" style="margin-top: 20px;">
@@ -86,6 +98,8 @@
                 </center>
             </div>
             {% endif %}
+        <br>
+        <br>
         </div>
     
         <script>

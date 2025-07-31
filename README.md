@@ -10,6 +10,10 @@ Run sentiment analysis on phone call (conversaion) transcripts.
 4. **output:** graded transcripts
 5. output used to fill out glsa forms
 
+## **Architecture**
+
+![architecture](data/GLSA_grading.png)
+
 ## 1. Running Application
 
 Hosting on Replit

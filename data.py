@@ -66,9 +66,22 @@ class Customers:
         self.customers.append(Customer(phone, grade, grade_secondary, transcript))
 
 
+class DateRange:
+    def __init__(self, start_date: str, end_date: str):
+        self.start_date = start_date
+        self.end_date = end_date
+    
+    def set_start(self, start_date: str):
+        self.start_date = start_date
 
+    def get_start(self):
+        return self.start_date
+    
+    def set_end(self, end_date: str):
+        self.end_date = end_date
 
-
+    def get_end(self):
+        return self.end_date
 
 
 

@@ -148,7 +148,8 @@
                 const a = document.createElement('a');
                 a.setAttribute('hidden', '');
                 a.setAttribute('href', url);
-                a.setAttribute('download', `grading_results_${getPreviousMonthYear()}.csv`);
+                //a.setAttribute('download', `grading_results_${getPreviousMonthYear()}.csv`);
+                a.setAttribute('download', `grading_results.csv`);
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -378,7 +379,8 @@
                         }
                         
                         // If successful, proceed to GoogleLSA
-                        window.location.href = '/glsa';
+                        //window.location.href = '/glsa';
+                        window.location.href = '/glsa-date-range';
                         
                     } catch (error) {
                         console.error('Error updating grades:', error);
