@@ -1,4 +1,5 @@
 { pkgs }: {
+
     deps = [
         pkgs.python311Full
         pkgs.python311Packages.pip
@@ -7,8 +8,6 @@
         pkgs.geckodriver
         pkgs.xvfb-run
         pkgs.which
-        pkgs.python311Packages.selenium
-        pkgs.python311Packages.numpy
         pkgs.python311Packages.setuptools
         pkgs.python311Packages.wheel
         pkgs.gnumake
