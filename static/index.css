@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
 /* Dark theme colors */
 :root {
     --bg-primary: #1a1a1a;
@@ -291,8 +293,12 @@ html, body {
     padding: 15px;
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
-    white-space: pre-wrap;
+    white-space: pre-line; /* Changed from pre-wrap to preserve line breaks but normalize spaces */
     word-wrap: break-word;
+    line-height: 1.5; /* Added for better readability */
+    letter-spacing: normal; /* Reset the inherited 3px letter-spacing */
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300; /* Light weight */
 }
 
 /* Modal and Overlay Styles */

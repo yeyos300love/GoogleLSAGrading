@@ -135,7 +135,7 @@ def convert_grade_secondary_to_full(grade_secondary: str) -> str:
         return grade_secondary
     
 
-def convert_grade_secondary_to_index(grade_secondary: str, sentiment: str) -> int:
+def convert_grade_secondary_to_index(grade_secondary: str) -> int:
     """
     Convert a short grade_secondary value to its index.
     

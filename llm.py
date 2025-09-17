@@ -115,7 +115,7 @@ def sentiment_analysis(transcript: str) -> tuple:
     client = OpenAI(api_key=api_key, timeout=120.0)
     
     response = client.chat.completions.create(
-        model="o3-mini", #"gpt-3.5-turbo", #"o3-mini-2025-01-31",
+        model="o3-mini", #o3-2025-04-16, #"gpt-3.5-turbo", #"o3-mini-2025-01-31",
         messages=[
             {"role": "user", "content": prompt}
         ],
