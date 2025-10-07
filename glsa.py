@@ -96,11 +96,12 @@ def grade_call(customer, grade, grade_secondary_short):
     grade_secondary_index = convert_grade_secondary_to_index(grade_secondary_short)
 
     rate_lead_button = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[2]/span/div[2]/div/div/div[1]/div[2]/div/button/span')
+    time.sleep(1)
     rate_lead_button.click()
 
     # switch driver to iframe
     iframe = WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.ID, '//*[@id="google-hats-survey_parent-dialog-dom"]'))
+        EC.presence_of_element_located((By.ID, 'google-hats-survey_parent-dialog-dom'))
     )
     driver.switch_to.frame(iframe)
 
@@ -108,11 +109,15 @@ def grade_call(customer, grade, grade_secondary_short):
         nor_option = wait_and_find_element(By.XPATH, '/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div/sc-survey-single-select-button[3]/div/button/div[2]')
         nor_option.click()
 
-        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button/span')
-        done_survey_element.click()
+        # switch driver to back original
+        driver.switch_to.default_content()
 
+        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button')
+        done_survey_element.click()  
+        time.sleep(2)
         archive_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[1]/div[1]/div/div[2]/div[2]/div[1]/span/span')
         archive_option.click()
+        time.sleep(1)
 
     elif grade == 'Very satisfied' and grade_secondary_short == 'Booked':
         satisfied_option = wait_and_find_element(By.XPATH, '/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div/sc-survey-single-select-button[1]/div/button/div[2]')
@@ -121,30 +126,38 @@ def grade_call(customer, grade, grade_secondary_short):
         converted_secondary_option = wait_and_find_element(By.XPATH, '/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div[1]/sc-survey-single-select-button[1]/div')
         converted_secondary_option.click()
 
-        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button/span')
-        done_survey_element.click()
+        # switch driver to back original
+        driver.switch_to.default_content()
 
+        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button')
+        done_survey_element.click()  
+        time.sleep(2)
         marked_booked_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[1]/div[1]/div/div[2]/div[2]/div[2]/span/span')
         marked_booked_option.click()
-
+        time.sleep(1)
         save_survey_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div/div[2]/div[3]/div[2]/span/span')
         save_survey_option.click()
-        
+        time.sleep(1)
+
     elif grade == 'Very satisfied' and grade_secondary_short != 'Booked':
         satisfied_option = wait_and_find_element(By.XPATH, '/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div/sc-survey-single-select-button[1]/div/button/div[2]')
         satisfied_option.click()
-        
+
         grade_secondary_option = wait_and_find_element(By.XPATH, f'/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div[1]/sc-survey-single-select-button[{grade_secondary_index}]/div')
         grade_secondary_option.click()
         #"Other" Positive Option
         #/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div[2]/div/sc-survey-survey-custom-response/div/label/input
 
-        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button/span')
-        done_survey_element.click()
+        # switch driver to back original
+        driver.switch_to.default_content()
 
+        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button')
+        done_survey_element.click()  
+        time.sleep(2)
         archive_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[1]/div[1]/div/div[2]/div[2]/div[1]/span/span')
         archive_option.click()
-        
+        time.sleep(1)
+
     elif grade == 'Very dissatisfied':
         dissatisfied_option = wait_and_find_element(By.XPATH, '/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div/sc-survey-single-select-button[5]/div/button/div[2]')
         dissatisfied_option.click()
@@ -152,17 +165,18 @@ def grade_call(customer, grade, grade_secondary_short):
         grade_secondary_option = wait_and_find_element(By.XPATH, f'/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div[1]/sc-survey-single-select-button[{grade_secondary_index}]/div')
         grade_secondary_option.click()
 
-        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button/span')
-        done_survey_element.click()
+        # switch driver to back original
+        driver.switch_to.default_content()
 
+        done_survey_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button')
+        done_survey_element.click()       
+        time.sleep(2)
         archive_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[1]/div[1]/div/div[2]/div[2]/div[1]/span/span')
         archive_option.click()
+        time.sleep(1)
         
     else:
         raise ValueError(f"Invalid grade: {grade}")
-    
-    # switch driver to back original
-    driver.switch_to.default_content()
 
 
 def login(url: str):
@@ -203,8 +217,8 @@ def login(url: str):
 
 def get_final_index(n: int) -> int:
     remainder = n % 20
-    return 20 if remainder == 0 else remainder
-    #return 19 if remainder == 0 else remainder - 1
+    #return 20 if remainder == 0 else remainder
+    return 19 if remainder == 0 else remainder - 1
 
 
 def calculate_clicks_to_last_page(n):
@@ -321,57 +335,57 @@ if __name__ == '__main__':
     account_selector.click()
     time.sleep(1)
     # filter calls table by charged leads
-    charge_status_dropdown = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/span')
+    charge_status_dropdown = wait_and_find_element(By.CSS_SELECTOR, '[role="listbox"][aria-label="Charge phase filter"]')
     charge_status_dropdown.click()
     time.sleep(1)
-    charged_leads = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/div[2]/div[2]/div[2]')
+    charged_leads = wait_and_find_element(By.CSS_SELECTOR, 'div[role="option"][data-value="Charged leads"]')
     charged_leads.click()
     time.sleep(1)
     # filter calls table by phone leads
-    lead_status_dropdown = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/span')
+    lead_status_dropdown = wait_and_find_element(By.CSS_SELECTOR, '[role="listbox"][aria-label="Lead type filter"]')
     lead_status_dropdown.click()
     time.sleep(1)
-    phone_leads = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/div[3]/div[2]/div[2]/span')
+    phone_leads = wait_and_find_element(By.CSS_SELECTOR, 'div[role="option"][data-value="phone"]')
     phone_leads.click()
     time.sleep(1)
     # filter calls table
-    time_dropdown = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/span/div/div[1]/div/div[1]/div/span/span')
+    time_dropdown = wait_and_find_element(By.CSS_SELECTOR, 'span.A37UZe.sxyYjd.MQL3Ob')
     time_dropdown.click()
     time.sleep(1)
     # filter calls table by last month
     if start_date == end_date:
-        last_month_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div[2]/div/div/span[4]')
+        last_month_option = wait_and_find_element(By.CSS_SELECTOR, 'div[data-value="last_month"]')
         last_month_option.click()
         time.sleep(1)
         # filter calls table by custom range
     elif start_date != end_date:
-        custom_range_option = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div[2]/div/div/span[7]')
+        custom_range_option = wait_and_find_element(By.CSS_SELECTOR, 'div[data-value="custom"]')
         custom_range_option.click()
         result = asyncio.run(run_agent())
-        apply_date_range_button = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[1]/div[1]/span/div/div[3]/div[3]/div[2]/div/span/span')
+        apply_date_range_button = wait_and_find_element(By.CSS_SELECTOR, '[role="button"][aria-label="Apply"]')
         apply_date_range_button.click()
 
     # navigate to final page
     clicks_needed = calculate_clicks_to_last_page(total_json_customers)
 
     for i in range(clicks_needed):
-        next_button = WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[2]/c-wiz/div/span[2]/span[3]/span'))
-        )
-
+        #next_button = WebDriverWait(driver, 5).until(
+        #    EC.element_to_be_clickable((By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[2]/c-wiz/div/span[2]/span[3]/span'))
+        #)
+        next_button = wait_and_find_element(By.CSS_SELECTOR, 'span[data-paginate="next"]')
         next_button.click()
         #print(f"Clicked next button {i + 1}/{clicks_needed}")
         time.sleep(2)  # Wait for page to load
     #print("Navigation to last page completed")
     
     #ex) 101-108 of 108
-    customer_frontend_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[2]/c-wiz/div/span[2]/span[1]')
-    string_frontend_customers = customer_frontend_element.text
-    total_frontend_customers = int(string_frontend_customers.split()[-1])
+    #customer_frontend_element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[2]/c-wiz/div/span[2]/span[1]')
+    #string_frontend_customers = customer_frontend_element.text
+    #total_frontend_customers = int(string_frontend_customers.split()[-1])
     
     # Check if frontend and JSON customer counts match
-    if total_frontend_customers > total_json_customers:
-        raise ValueError(f"Mismatch in customer counts: Frontend has {total_frontend_customers} customers, but JSON has {total_json_customers} customers")
+    #if total_frontend_customers > total_json_customers:
+    #    raise ValueError(f"Mismatch in customer counts: Frontend has {total_frontend_customers} customers, but JSON has {total_json_customers} customers")
 
     # Wait for element to be located and get its text
     #element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[8]/td[1]/div')
@@ -391,9 +405,10 @@ if __name__ == '__main__':
     while True:
         # Wait for element to be located and get its text
         #element = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[20]/td[1]/div/span') 
-        
-        element = wait_and_find_element(By.XPATH, f'//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[{final_index}]/td[1]/div/span') 
-        current_text = element.text
+        #element = wait_and_find_element(By.XPATH, f'//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[{final_index}]/td[1]/div/span') 
+        element = wait_and_find_element(By.CSS_SELECTOR, f'tr[data-row-id="{final_index}"]')
+        current_text = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[3]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[11]/td[1]/div/span').text
+        element.click()
         
         #print(element.text)
         
@@ -421,13 +436,17 @@ if __name__ == '__main__':
         # perform grading
         grade_call(current_text, grade, grade_secondary)
         cnt += 1
-        print(f"GRADING_COMPLETE:{current_text}")
+        print(f"{cnt}. GRADING_COMPLETE: {current_text}")
         
         # Wait for back button and click
+        time.sleep(1)
         back_button = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[1]/div[1]/div/div[1]/div/span/span/span')
+        time.sleep(1)
         back_button.click()
-        time.sleep(3)
+        #wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[1]/div[1]/div/div[1]/div/span/span/span').click()
+        time.sleep(2)
 
+    print('End Filling Forms')
     # close browser session
     driver.quit()
     

@@ -203,7 +203,8 @@ def search_number(phone_num: str):
     time.sleep(4)
     try:
         # select first call
-        hover_call_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[3]/div[2]')
+        #hover_call_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[3]/div[2]')
+        hover_call_box = wait_and_find_element(By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div/div/div[1]/div/div[3]')
         hover_call_box.click()
         
         try:
