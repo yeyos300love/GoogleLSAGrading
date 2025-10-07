@@ -2,9 +2,6 @@ __pycache__/
 secrets.txt
 
 glsag_app_env/
-data/*
-!data/.gitkeep
-!data/GLSA_grading.png
 
-docker-compose.yml
-Dockerfile
+instance
+*.db

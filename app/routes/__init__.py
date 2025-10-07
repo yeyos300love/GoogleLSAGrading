@@ -1,0 +1,1 @@
+from app.routes.dashboard import bp as dashboard_bp
