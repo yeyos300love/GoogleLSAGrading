@@ -1,7 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Home{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>Added content let's go</h1>
+<h1><center>Google LSA Grading</center></h1>
+
+<center>
+    <div class="tooltip-container" onclick="window.location.href='/glsa-solo'">
+        <p>Standard (Direct GLSA) Coming Soon...</p>
+        <div class="tooltip">Select a Month: Grading & Form Completion (GLSA)</div>
+    </div>
+
+</center>
+<br>
+<center>
+     <div class="tooltip-container">
+        <form id="csvForm" action="{{ url_for('dashboard.upload') }}" method="POST" enctype="multipart/form-data">
+            <button type="button" onclick="document.getElementById('csvFileInput').click();">Original (Podium)</button>
+            <input type="file" name="file" id="csvFileInput" accept=".csv" style="display:none;">
+        </form>
+        <div class="tooltip">Upload a CSV: Fetching & Grading (Podium), & Form Completion (GLSA)</div>
+    </div>
+</center>
+
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+
 {% endblock %}

@@ -5,3 +5,5 @@ glsag_app_env/
 
 instance
 *.db
+
+uploads/

@@ -3,9 +3,14 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
         <title>404 Not Found</title>
     </head>
     <body>
-        <h1>AHA! 404 Not Found</h1>
+        <center>
+        <h1>404 Not Found</h1>
+        <p>Whoops! Looks like the page you're looking for doesn't exist.</p>
+        <a href="/">Go Home</a>
+        </center>
     </body>
 </html>

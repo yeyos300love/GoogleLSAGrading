@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}All Jobs{% endblock %}
+
+{% block content %}
+<center>
+<h1>All Pipeline Jobs</h1>
+
+{% if jobs %}
+<div id="jobs-list">
+  {% for job in jobs %}
+  <a href="{{ url_for('jobs.detail', job_id=job.id) }}" class="job-card">
+    <div class="job-left">
+      <h3 class="job-title">{{ job.csv_filename }}</h3>
+    </div>
+
+    <div class="job-right">
+      <div class="job-status">
+        <span class="status-{{ job.status }}">{{ job.status }}</span>
+      </div>
+
+      <div class="job-meta">
+        <p class="job-records">Total Records: {{ job.total_records }}</p>
+        <p class="job-id">ID: {{ job.id }}</p>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+</center>
+{% endif %}
+
+{% endblock %}

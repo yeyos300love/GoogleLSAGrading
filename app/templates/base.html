@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Pipeline Dashboard{% endblock %}</title>
+    <title>{% block title %}Base Template{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
-    <h1>Welcome to the Homepage!</h1>
+    <!-- include navbar component -->
+    {% include 'components/navbar.html' %}
+
     {% block content %}
+    <h1><center>Google LSA Grading</center></h1>
     {% endblock %}
 </body>
 </html>

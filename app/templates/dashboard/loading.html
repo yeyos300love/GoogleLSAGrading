@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Loading{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/animation.css') }}">
+
+<h1><center>Thinking Center</center></h1>
+
+<center>
+    <!-- Progress message -->
+    <p id="progress-message" style="color: #f9fafb; font-size: 18px; margin-top: 20px;">Preparing...</p>
+
+    <!-- Loading Animation -->
+    <div id="container">
+        <div id="bot">
+            <div id="eyes">
+                <div id="left"><div class="eye"></div></div>
+                <div id="right"><div class="eye"></div></div>
+            </div>
+            <div id="leftarm">
+                <div class="finger"></div>
+                <div class="finger"></div>
+            </div>
+            <div id="rightarm">
+                <div class="finger"></div>
+                <div class="finger"></div>
+            </div>
+        </div>
+        <div id="neck"></div>
+        <div id="body"></div>
+        <div id="legs">
+            <div id="left"><div class="foot"></div></div>
+            <div id="right"><div class="foot"></div></div>
+        </div>
+    </div>
+</center>
+
+<script>
+    // Pass job_id and action to the external JS
+    window.jobId = "{{ job_id }}";
+    window.action = "{{ action }}";
+</script>
+<script src="{{ url_for('static', filename='js/loading.js') }}"></script>
+
+{% endblock %}
