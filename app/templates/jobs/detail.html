@@ -123,7 +123,24 @@
                     {% endif %}
                 </td>               
                 <td>
-                    {% if customer.transcript %}
+                    {% if job.status == 'pending' and customer.status == 'pending' %}
+                        <button class="add-transcript-btn" 
+                                onclick="addTranscript(this)"
+                                data-phone="{{ customer.phone }}"
+                                title="Add transcript">
+                            Add
+                        </button>
+                    {% else %}
+                        <button 
+                            class="view-transcript-btn {% if customer.transcript.startswith('FAILED') %}failure{% elif customer.transcript.startswith('WARNING') %}warning{% endif %}"
+                            data-transcript="{{ customer.transcript | escape }}"
+                            data-phone="{{ customer.phone }}"
+                            onclick="showTranscript(this)"
+                        >
+                            View
+                        </button>
+                    {% endif %}
+                    <!--{% if customer.transcript %}
                         <button 
                             class="view-transcript-btn {% if customer.transcript.startswith('FAILED') %}failure{% elif customer.transcript.startswith('WARNING') %}warning{% endif %}"
                             data-transcript="{{ customer.transcript | escape }}"
@@ -134,7 +151,7 @@
                         </button>
                     {% else %}
                         <em class="not-fetched">Not fetched</em>
-                    {% endif %}
+                    {% endif %}-->
                 </td>
             </tr>
             {% endfor %}

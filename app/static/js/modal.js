@@ -51,8 +51,8 @@ function closeTranscript() {
     const editButton = document.getElementById('editButton');
     const saveForm = document.getElementById('transcriptForm');
 
-    // Remove active class from all buttons
-    document.querySelectorAll('.view-transcript-btn').forEach(btn => {
+    // Remove active class from all buttons (both view and add)
+    document.querySelectorAll('.view-transcript-btn, .add-transcript-btn').forEach(btn => {
         btn.classList.remove('active');
     });
 
@@ -89,8 +89,8 @@ document.addEventListener('click', function(event) {
     // Only trigger if modal is open
     if (!modal.classList.contains('show')) return;
 
-    // Do NOT close if clicking a transcript button
-    if (event.target.closest('.view-transcript-btn')) return;
+    // Do NOT close if clicking a transcript button (view or add)
+    if (event.target.closest('.view-transcript-btn, .add-transcript-btn')) return;
 
     // Close only if click is outside the modal
     if (!modal.contains(event.target)) {
@@ -124,7 +124,7 @@ function saveTranscript(event) {
     if (event) event.preventDefault();
     
     const transcriptText = document.getElementById('transcriptText');
-    const activeButton = document.querySelector('.view-transcript-btn.active');
+    const activeButton = document.querySelector('.view-transcript-btn.active, .add-transcript-btn.active');
     
     if (!activeButton) return;
     
@@ -139,14 +139,61 @@ document.addEventListener('DOMContentLoaded', function() {
     const reopenPhone = urlParams.get('reopen');
     
     if (reopenPhone) {
-        // Find the button with matching phone number
-        const button = document.querySelector(`.view-transcript-btn[data-phone="${reopenPhone}"]`);
+        // Find the button with matching phone number (either view or add)
+        const button = document.querySelector(`.view-transcript-btn[data-phone="${reopenPhone}"], .add-transcript-btn[data-phone="${reopenPhone}"]`);
         if (button) {
-            showTranscript(button);
+            if (button.classList.contains('add-transcript-btn')) {
+                addTranscript(button);
+            } else {
+                showTranscript(button);
+            }
         }
         
         // Clean up URL without reload
         window.history.replaceState({}, '', window.location.pathname);
     }
 });
+
+function addTranscript(buttonElement) {
+    const modal = document.getElementById('transcriptModal');
+    const transcriptText = document.getElementById('transcriptText');
+    const modalTitle = document.getElementById('modalTitle');
+    const editButton = document.getElementById('editButton');
+    const saveForm = document.getElementById('transcriptForm');
+    
+    const phoneNumber = buttonElement.dataset.phone;
+    
+    // Remove active class from all buttons (both view and add)
+    document.querySelectorAll('.view-transcript-btn, .add-transcript-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Remove highlight from all rows
+    document.querySelectorAll('tr.viewing-transcript').forEach(row => {
+        row.classList.remove('viewing-transcript');
+    });
+    
+    // Add active class to the clicked button
+    buttonElement.classList.add('active');
+
+    // Highlight the row
+    const row = buttonElement.closest('tr');
+    row.classList.add('viewing-transcript');
+    
+    // Clear and set to edit mode
+    transcriptText.textContent = '';
+    transcriptText.contentEditable = true;
+    transcriptText.focus();
+    
+    // Hide edit button, show save form
+    editButton.style.display = 'none';
+    saveForm.style.display = 'flex';
+    
+    // Update title
+    modalTitle.textContent = `${phoneNumber} - Add Transcript`;
+    
+    // Show modal
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+}
 

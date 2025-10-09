@@ -269,9 +269,31 @@ body {
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
-.not-fetched {
-    color: #9ca3af;
-    font-style: italic;
+
+/* ---------------------- transcript add button ---------------------- */
+.add-transcript-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background-color: #888888;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.add-transcript-btn:hover {
+    background-color: #363636;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.add-transcript-btn.active {
+    background-color: #1f1f1f;
+    outline: 2px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 

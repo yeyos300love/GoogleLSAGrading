@@ -56,7 +56,7 @@ def analyze_stream(job_id):
     job = PipelineJob.query.get_or_404(job_id)
     #job = db.session.get(PipelineJob, job_id) instead of PipelineJob.query.get(job_id)
     
-    # Get only leads that are transcript_fetched and don't start with FAILED
+    # get only leads that are transcript_fetched and don't start with FAILED
     leads = Lead.query.filter_by(job_id=job_id, status='transcript_fetched').all()
     leads_to_analyze = [lead for lead in leads if not lead.transcript.startswith('FAILED')]
 
@@ -76,13 +76,13 @@ def analyze_stream(job_id):
         print(str(i)+'.', 'Grading:', lead.phone)
         #db.session.commit()
     
-    # Check if all leads are analyzed
+    # check if all leads are analyzed
     all_leads = Lead.query.filter_by(job_id=job_id).all()
     if all(lead.status == 'analyzed' for lead in all_leads):
         job.status = 'analyzed'
-        #db.session.commit()
+        db.session.commit()
     
-    # Send completion
+    # send completion
     yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
 
 
@@ -125,9 +125,7 @@ def save(job_id):
 
 @bp.route('/<int:job_id>/save-transcript', methods=['POST'])
 def save_transcript(job_id):
-    #job = PipelineJob.query.get_or_404(job_id)
-    
-    print("Form data:", request.form)  # Debug lin
+    job = PipelineJob.query.get_or_404(job_id)
 
     phone = request.form.get('phone')
     transcript = request.form.get('transcript')
@@ -135,14 +133,28 @@ def save_transcript(job_id):
     if not phone or transcript is None:
         return jsonify({'success': False, 'error': 'Missing phone or transcript'}), 400
     
-    # Find the lead by phone number
+    # find the lead by phone number
     lead = Lead.query.filter_by(job_id=job_id, phone=phone).first()
     
     if not lead:
         return jsonify({'success': False, 'error': 'Lead not found'}), 404
     
-    # Update the transcript
+    # update the transcript
     lead.transcript = transcript
+    
+    # if status is 'not_fetched', update to 'transcript_fetched'
+    if lead.status == 'pending':
+        lead.status = 'transcript_fetched'
+
+    # check if all leads are transcript_fetched, if so update job status
+    # get all leads for this job
+    leads = Lead.query.filter_by(job_id=job_id).all()
+    if all(lead.status == 'transcript_fetched' for lead in leads):
+        job.status = 'transcripts_fetched'
+    
+    # for all other statuses, just update the transcript without changing status
     db.session.commit()
+
+
     
     return redirect(url_for('jobs.detail', job_id=job_id, reopen=phone))
