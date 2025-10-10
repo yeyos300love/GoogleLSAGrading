@@ -1,52 +1,150 @@
-from flask import Blueprint, Response, render_template, stream_with_context, redirect, url_for, jsonify, request
+from flask import Blueprint, Response, render_template, stream_with_context, redirect, url_for, jsonify, request, current_app
 from app.models import PipelineJob, Lead
-from app.services.podium_client import podium_subprocess
+from app.services.podium_client import start_podium_subprocess, perform_verification, continue_podium_subprocess
 from app import db
+import threading
 import json
+
 
 bp = Blueprint('jobs', __name__)
 
 active_drivers = {}
+driver_lock = threading.Lock()
 
+
+# -------------------------------------- display all jobs --------------------------------------
 @bp.route('/') # default route
 @bp.route('/list-jobs')
 def list_jobs():
     jobs = PipelineJob.query.order_by(
-        PipelineJob.id.asc() #desc()
+        PipelineJob.id.desc() #asc()
     ).all()
     return render_template('jobs/list.html', jobs=jobs)
 
+# -------------------------------------- display individual job details --------------------------------------
 @bp.route('/job/<int:job_id>')
 def detail(job_id):
     job = PipelineJob.query.get_or_404(job_id)
     #job = db.session.get(PipelineJob, job_id) instead of PipelineJob.query.get(job_id)
     leads = Lead.query.filter_by(job_id=job_id).all()
 
-    # calculate number of leads leftto analyze
+    # calculate number of leads analyzed
     analyzed_count = Lead.query.filter_by(job_id=job_id, status='analyzed').count()
+    # calculate number of lead transcript fetched
+    fetched_count = Lead.query.filter_by(job_id=job_id, status='transcript_fetched').count()
+    # calculate number of lead transcript fetched
+    completed_count = Lead.query.filter_by(job_id=job_id, status='completed').count()
 
-    return render_template('jobs/detail.html', job=job, customers=leads, analyzed_count=analyzed_count)
+    return render_template('jobs/detail.html', job=job, customers=leads, 
+                                                analyzed_count=analyzed_count,
+                                                fetched_count=fetched_count,
+                                                completed_count=completed_count)
 
-@bp.route('/<int:job_id>/start-podium')
+
+# -------------------------------------- loading messages --------------------------------------
+@bp.route('/<int:job_id>/loading')
+def loading(job_id):
+    action = request.args.get('action')#, 'fetch-transcripts')
+    return render_template('dashboard/loading.html', job_id=job_id, action=action)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -------------------------------------- TODO fetch transcripts --------------------------------------
+@bp.route('/<int:job_id>/start-podium', methods=['POST'])
 def start_podium(job_id):
     """user clicks 'Fetch Transcripts' - starts podium"""
-    
-    driver = podium_subprocess()
-    active_drivers[f'podium_{job_id}'] = driver
-    
-    return render_template('jobs/podium.html')#, job=job)
+    job = PipelineJob.query.get_or_404(job_id)
+    app = current_app._get_current_object()
 
+    def run_podium():
+        with app.app_context():
+            driver = start_podium_subprocess()
+            with driver_lock:
+                active_drivers[f'podium_{job_id}'] = driver
+            print(f"Driver stored for job {job_id}")
+
+    # start background thread
+    # redirect immediatley while target starts/runs in the background
+    threading.Thread(target=run_podium, daemon=True).start()
+    
+    return render_template('jobs/podium.html', job=job)
 
 @bp.route('/<int:job_id>/submit-2fa', methods=['POST'])
 def submit_2fa(job_id):
     """user submitted 2FA code"""
     code = request.json.get('code')
-    driver = active_drivers.get(f'podium_{job_id}')
+    print(f'we recieved this: {code}')
+    
+    # Use lock to safely retrieve the driver
+    with driver_lock:
+        driver = active_drivers.get(f'podium_{job_id}')
+
+    perform_verification(driver, code)
+
+    #return redirect(url_for('jobs.loading', job_id=job_id), action='fetch-transcripts')
+    #return Response(stream_with_context(fetching_stream(job_id)), mimetype='text/event-stream')
+    return jsonify({'success': True})
+
+@bp.route('/<int:job_id>/fetch-transcripts-stream', methods=['GET'])
+def fetch_transcripts_stream(job_id):
+    return Response(stream_with_context(fetching_stream(job_id)), mimetype='text/event-stream')
+
+def fetching_stream(job_id):
+    
+    with driver_lock:
+        driver = active_drivers.get(f'podium_{job_id}')
+
+    continue_podium_subprocess(driver)
+
+    # get only leads that are pending
+    leads = Lead.query.filter_by(job_id=job_id, status='pending').all()
+
+    total = len(leads)
+    
+    if total == 0:
+        yield f"data: {json.dumps({'message': 'No transcripts to fetch', 'done': True})}\n\n"
+        return
+
+    for i, lead in enumerate(leads, 1):
+        # Send progress update
+        yield f"data: {json.dumps({'message': f'Let me fetch those transcripts...({i}/{total})', 'progress': i, 'total': total})}\n\n"
+
+        print(str(i)+'.', 'Fetching:', lead.phone)
+        import time
+        time.sleep(1)
+
+    # send completion
+    yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
 
 
+
+
+
+
+
+
+
+
+
+
+# -------------------------------------- TODO sentiment analysis --------------------------------------
 @bp.route('/<int:job_id>/analyze-all', methods=['POST'])
 def analyze_all(job_id):
-    return render_template('dashboard/loading.html', job_id=job_id, action='analyze')
+    #return render_template('dashboard/loading.html', job_id=job_id, action='analyze-all')
+    return redirect(url_for('jobs.loading', job_id=job_id, action='analyze-all'))
 
 @bp.route('/<int:job_id>/analyze-all-stream', methods=['GET'])
 def analyze_all_stream(job_id):
@@ -73,6 +171,8 @@ def analyze_stream(job_id):
         # TODO: Perform your actual analysis here
         # Example: lead.grade = analyze_transcript(lead.transcript)
         # lead.status = 'analyzed'
+        import time
+        time.sleep(0.25)
         print(str(i)+'.', 'Grading:', lead.phone)
         #db.session.commit()
     
@@ -86,6 +186,66 @@ def analyze_stream(job_id):
     yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
 
 
+
+
+
+
+# -------------------------------------- TODO glsa form filler --------------------------------------
+@bp.route('/<int:job_id>/form-completion', methods=['POST'])
+def form_completion(job_id):
+    return redirect(url_for('jobs.loading', job_id=job_id, action='form-completion'))
+
+@bp.route('/<int:job_id>/form-completion-stream', methods=['GET'])
+def form_completion_stream(job_id):
+    return Response(stream_with_context(completion_stream(job_id)), mimetype='text/event-stream')
+
+def completion_stream(job_id):
+    job = PipelineJob.query.get_or_404(job_id)
+    #job = db.session.get(PipelineJob, job_id) instead of PipelineJob.query.get(job_id)
+
+    # get only leads that are analyzed
+    leads = Lead.query.filter_by(job_id=job_id, status='analyzed').all()
+    total = len(leads)
+    
+    if total == 0:
+        yield f"data: {json.dumps({'message': 'No lead forms to complete', 'done': True})}\n\n"
+        return
+
+    for i, lead in enumerate(leads, 1):
+        # Send progress update
+        yield f"data: {json.dumps({'message': f'Let me fill those lead forms...({i}/{total})', 'progress': i, 'total': total})}\n\n"
+
+        print(str(i)+'.', 'Completed Form for:', lead.phone)
+        import time
+        time.sleep(1)
+        #lead.status = 'completed'
+        #db.session.commit()
+
+    # check if all leads are analyzed
+    all_leads = Lead.query.filter_by(job_id=job_id).all()
+    if all(lead.status == 'completed' for lead in all_leads):
+        job.status = 'completed'
+        db.session.commit()
+
+    # send completion
+    yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -------------------------------------- save table --------------------------------------
 @bp.route('/<int:job_id>/save', methods=['POST'])
 def save(job_id):
     job = PipelineJob.query.get_or_404(job_id)
@@ -123,6 +283,7 @@ def save(job_id):
     return redirect(url_for('jobs.detail', job_id=job_id))
 
 
+# -------------------------------------- save transcript --------------------------------------
 @bp.route('/<int:job_id>/save-transcript', methods=['POST'])
 def save_transcript(job_id):
     job = PipelineJob.query.get_or_404(job_id)
@@ -155,6 +316,4 @@ def save_transcript(job_id):
     # for all other statuses, just update the transcript without changing status
     db.session.commit()
 
-
-    
     return redirect(url_for('jobs.detail', job_id=job_id, reopen=phone))

@@ -13,11 +13,11 @@
         <div class="phase-card">
             <div class="phase-card-content">
                 <h2>Step 1:🔍 Fetch Transcripts from Podium</h2>
-                <p>This will open a browser window. You'll need to authenticate.</p>
+                <p>{{ fetched_count }} / {{ job.total_records }} transcripts have been fetched. Podium will open in a headless browser.</p>
             </div>
             <div class="phase-card-actions">
                 <!-- <a href="{{ url_for('jobs.start_podium', job_id=job.id) }}" class="btn btn-primary">Start Podium Fetch</a> -->
-                 <form method="POST" action="{{ url_for('jobs.start_podium', job_id=job.id) }}">
+                <form method="POST" action="{{ url_for('jobs.start_podium', job_id=job.id) }}">
                     <button type="submit" class="service-button">Start Podium Fetch</button>
                 </form>
             </div>
@@ -42,18 +42,33 @@
 
     {% endif %}
     <!-- phase 3: submit to google -->
-    {% if job.phase == 'analyzed' %}
+    {% if job.status == 'analyzed' %}
     <div class="phase-card">
-        <h2>Step 3:📤 Submit to Google Forms</h2>
-        <p>This will open a browser. You'll need to authenticate with Google.</p>
-        <a href="{{ url_for('jobs.start_glsa', job_id=job.id) }}" class="btn btn-primary">Send to GLSA</a>
+            <div class="phase-card-content">
+                <h2>Step 3:📤 Submit to Google Forms</h2>
+                <p>{{ completed_count }} / {{ job.total_records }} lead forms have been completed. This will open a browser.</p>
+            </div>
+            <div class="phase-card-actions">
+                <form method="POST" action="{{ url_for('jobs.form_completion', job_id=job.id) }}">
+                    <button type="submit" class="service-button">Send to GLSA</button>
+                </form>
+                <form method="POST" action="{{ url_for('jobs.save', job_id=job.id) }}" onsubmit="return collectGrades(this)">
+                    <button type="submit" class="save-button">Save</button>
+                </form>
+            </div>
     </div>
     {% endif %}
 
-    {% if job.phase == 'completed' %}
-    <div class="phase-card success">
-        <h2>✓ Pipeline Complete!</h2>
-        <p>All {{ job.total_records }} customers processed.</p>
+    {% if job.status == 'completed' %}
+    <div class="phase-card">
+            <div class="phase-card-content">
+                <h2>✅ Pipeline Complete!</h2>
+                <p>All {{ job.total_records }} customers fully processed.</p>
+            </div>
+            <div class="phase-card-actions">
+                <a href="/list-jobs" class="service-button">See All Jobs</a>
+                <a href="/" class="service-button">Dashboard</a>
+            </div>
     </div>
     {% endif %}
 
@@ -160,6 +175,8 @@
     {% else %}
     <p>No customer records found for this job.</p>
     {% endif %}
+
+    <p>pending → transcripts_fetched → analyzed → completed</p>
 
 </center>
 

@@ -5,6 +5,7 @@
 {% block content %}
 <center>
 <h1>All Pipeline Jobs</h1>
+<p>⚪ Pending → 🟠 Transcripts Fetched → 🔵 Analyzed → 🟢 Completed</p>
 
 {% if jobs %}
 <div id="jobs-list">
@@ -16,7 +17,9 @@
 
     <div class="job-right">
       <div class="job-status">
-        <span class="status-{{ job.status }}">{{ job.status }}</span>
+        <!-- <span class="status-{{ job.status }}">{{ job.status }}</span> -->
+        <!-- update is to handle the fetched_transcripts status -->
+        <span class="status-{{ job.status }}">{{ job.status.replace('_', ' ') | title }}</span>
       </div>
 
       <div class="job-meta">
