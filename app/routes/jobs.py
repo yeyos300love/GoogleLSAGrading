@@ -4,6 +4,7 @@ from app.models import PipelineJob, Lead
 from app.services.podium_client import start_podium_subprocess, perform_verification, continue_podium_subprocess, search_number
 from app.services.sentiment_analyzer import analyze_sentiment
 from app.services.glsa_client import start_glsa_subprocess, continue_glsa_subprocess, get_final_index, fill_form
+from app.services.browser_utils import cleanup_driver
 from app import db
 import threading
 import json
@@ -92,44 +93,50 @@ def fetch_transcripts_stream(job_id):
     return Response(stream_with_context(fetching_stream(job_id)), mimetype='text/event-stream')
 
 def fetching_stream(job_id):
-    job = PipelineJob.query.get_or_404(job_id)
 
     with driver_lock:
         driver = active_drivers.get(f'podium_{job_id}')
 
-    continue_podium_subprocess(driver)
+    try:
+        continue_podium_subprocess(driver)
 
-    # get only leads that are pending
-    leads = Lead.query.filter_by(job_id=job_id, status='pending').all()
+        # get only leads that are pending
+        leads = Lead.query.filter_by(job_id=job_id, status='pending').all()
 
-    total = len(leads)
-    
-    if total == 0:
-        yield f"data: {json.dumps({'message': 'No transcripts to fetch', 'done': True})}\n\n"
-        return
+        total = len(leads)
+        
+        if total == 0:
+            yield f"data: {json.dumps({'message': 'No transcripts to fetch', 'done': True})}\n\n"
+            return
 
-    for i, lead in enumerate(leads, 1):
-        # Send progress update
-        yield f"data: {json.dumps({'message': f'Let me fetch those transcripts...({i}/{total})', 'progress': i, 'total': total})}\n\n"
+        for i, lead in enumerate(leads, 1):
+            # Send progress update
+            yield f"data: {json.dumps({'message': f'Let me fetch those transcripts...({i}/{total})', 'progress': i, 'total': total})}\n\n"
 
-        #import time
-        #time.sleep(1)
-        print(str(i)+'.', 'Fetching:', lead.phone)
+            #import time
+            #time.sleep(1)
+            print(str(i)+'.', 'Fetching:', lead.phone)
 
-        transcript = search_number(driver, lead.phone)
-        lead.transcript = transcript
-        lead.status = 'transcript_fetched'
-        db.session.commit()  
+            transcript = search_number(driver, lead.phone)
+            lead.transcript = transcript
+            lead.status = 'transcript_fetched'
+            db.session.commit()  
 
-    # check if all leads are transcript_fetched, if so update job status
-    # get all leads for this job
-    leads = Lead.query.filter_by(job_id=job_id).all()
-    if all(lead.status == 'transcript_fetched' for lead in leads):
-        job.status = 'transcripts_fetched'  
-        db.session.commit()
+        # check if all leads are transcript_fetched, if so update job status
+        job = PipelineJob.query.get_or_404(job_id)
+        # get all leads for this job
+        leads = Lead.query.filter_by(job_id=job_id).all()
+        if all(lead.status == 'transcript_fetched' for lead in leads):
+            job.status = 'transcripts_fetched'  
+            db.session.commit()
 
-    # send completion
-    yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
+        # send completion
+        yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
+
+    finally:
+        cleanup_driver(driver)
+        with driver_lock:
+            active_drivers.pop(f'podium_{job_id}', None)
 
 
 # -------------------------------------- sentiment analysis --------------------------------------
@@ -214,47 +221,53 @@ def completion_stream(job_id):
     with driver_lock:
         driver = active_drivers.get(f'glsa_{job_id}')
 
-    dates = [datetime.strptime(lead.received, "%b %d %Y") for lead in Lead.query.filter_by(job_id=job_id).all()]
-    start_date = min(dates).strftime("%b %d %Y")
-    end_date = max(dates).strftime("%b %d %Y")
-    #print(start_date, end_date)
+    try:
+        dates = [datetime.strptime(lead.received, "%b %d %Y") for lead in Lead.query.filter_by(job_id=job_id).all()]
+        start_date = min(dates)#.strftime("%b %d %Y")
+        end_date = max(dates)#.strftime("%b %d %Y")
+        #print(start_date, end_date)
 
-    continue_glsa_subprocess(driver, total_records=Lead.query.filter_by(job_id=job_id).count(), start_date=start_date, end_date=end_date)
+        continue_glsa_subprocess(driver, total_records=Lead.query.filter_by(job_id=job_id).count(), start_date=start_date, end_date=end_date)
 
-    job = PipelineJob.query.get_or_404(job_id)
-    #job = db.session.get(PipelineJob, job_id) instead of PipelineJob.query.get(job_id)
+        job = PipelineJob.query.get_or_404(job_id)
+        #job = db.session.get(PipelineJob, job_id) instead of PipelineJob.query.get(job_id)
 
-    # get only leads that are analyzed
-    leads = Lead.query.filter_by(job_id=job_id, status='analyzed').all()
-    total = len(leads)
-    
-    if total == 0:
-        yield f"data: {json.dumps({'message': 'No lead forms to complete', 'done': True})}\n\n"
-        return
-    
-    final_index = get_final_index(len(Lead.query.filter_by(job_id=job_id).all()))
-
-    for i, lead in enumerate(leads, 1):
-        # Send progress update
-        yield f"data: {json.dumps({'message': f'Let me fill those lead forms...({i}/{total})', 'progress': i, 'total': total})}\n\n"
-
-        print(str(i)+'.', 'Completing Form for:', lead.phone)
-        #import time
-        #time.sleep(0.25)
-        #print(lead.grade, lead.grade_secondary) if lead.grade_secondary else print(lead.grade)
+        # get only leads that are analyzed
+        leads = Lead.query.filter_by(job_id=job_id, status='analyzed').all()
+        total = len(leads)
         
-        fill_form(driver, lead.grade, lead.grade_secondary, final_index)
-        lead.status = 'completed'
-        db.session.commit()
+        if total == 0:
+            yield f"data: {json.dumps({'message': 'No lead forms to complete', 'done': True})}\n\n"
+            return
+        
+        final_index = get_final_index(len(Lead.query.filter_by(job_id=job_id).all()))
 
-    # check if all leads are analyzed
-    all_leads = Lead.query.filter_by(job_id=job_id).all()
-    if all(lead.status == 'completed' for lead in all_leads):
-        job.status = 'completed'
-        db.session.commit()
+        for i, lead in enumerate(leads, 1):
+            # Send progress update
+            yield f"data: {json.dumps({'message': f'Let me fill those lead forms...({i}/{total})', 'progress': i, 'total': total})}\n\n"
 
-    # send completion
-    yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
+            print(str(i)+'.', 'Completing Form for:', lead.phone)
+            #import time
+            #time.sleep(0.25)
+            #print(lead.grade, lead.grade_secondary) if lead.grade_secondary else print(lead.grade)
+            
+            fill_form(driver, lead.grade, lead.grade_secondary, final_index)
+            lead.status = 'completed'
+            db.session.commit()
+
+        # check if all leads are analyzed
+        all_leads = Lead.query.filter_by(job_id=job_id).all()
+        if all(lead.status == 'completed' for lead in all_leads):
+            job.status = 'completed'
+            db.session.commit()
+
+        # send completion
+        yield f"data: {json.dumps({'done': True, 'redirect': url_for('jobs.detail', job_id=job_id)})}\n\n"
+
+    finally:
+        cleanup_driver(driver)
+        with driver_lock:
+            active_drivers.pop(f'glsa_{job_id}', None)
 
 
 # -------------------------------------- save table --------------------------------------

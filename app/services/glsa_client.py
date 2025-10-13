@@ -1,7 +1,12 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from app.services.browser_utils import create_driver, wait_and_find_element
+from app.services.browser_agent import run_agent
 from flask import current_app
+from datetime import datetime
+from calendar import monthrange
+import asyncio
 import time
 
 
@@ -24,7 +29,7 @@ def start_glsa_subprocess():
     return driver
 
 
-def continue_glsa_subprocess(driver, total_records):
+def continue_glsa_subprocess(driver, total_records, start_date, end_date):
     # select "Advantage Heating & Air Conditioning"
     wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/c-wiz/div[1]/c-wiz/div/div[2]/div[2]/div[1]/span[1]/a').click()
     time.sleep(1)
@@ -45,9 +50,31 @@ def continue_glsa_subprocess(driver, total_records):
     wait_and_find_element(driver, By.CSS_SELECTOR, 'span.A37UZe.sxyYjd.MQL3Ob').click()
     time.sleep(1)
 
-    # set the dates
+    now = datetime.now()
+    prior_month = now.month - 1 if now.month > 1 else 12
+    prior_year = now.year if now.month > 1 else now.year - 1
+    last_day_prior = monthrange(prior_year, prior_month)[1]
 
+    # check if date range is exactly last month
+    if (start_date.day == 1 and 
+        start_date.month == prior_month and 
+        start_date.year == prior_year and
+        end_date.day == last_day_prior and
+        end_date.month == prior_month and
+        end_date.year == prior_year):
+        # click "Last Month"
+        wait_and_find_element(driver, By.CSS_SELECTOR, 'div[data-value="last_month"]').click()
+        time.sleep(1)
+    # use custom date range
+    else:
+        start_date = start_date.strftime("%b %d %Y")
+        end_date = end_date.strftime("%b %d %Y")
 
+        wait_and_find_element(driver, By.CSS_SELECTOR, 'div[data-value="custom"]').click()
+        # broswer-use agent help select correct dates
+        asyncio.run(run_agent(start_date, end_date))
+        # apply custom date
+        wait_and_find_element(driver,By.CSS_SELECTOR, '[role="button"][aria-label="Apply"]').click()
 
     # navigate to final page
     clicks_needed = calculate_clicks_to_last_page(total_records)
@@ -66,7 +93,22 @@ def fill_form(driver, grade, grade_secondary, index):
     wait_and_find_element(driver, By.CSS_SELECTOR, f'tr[data-row-id="{index}"]').click()
     #wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[3]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[11]/td[1]/div/span').text
 
-    
+    rate_lead_button = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[2]/span/div[2]/div/div/div[1]/div[2]/div/button/span')
+    time.sleep(1)
+    rate_lead_button.click()
+
+    if grade == 'Neither satisfied nor dissatisfied':
+        pass
+        # TODO
+    elif grade == 'Very satisfied' and grade_secondary == 'Booked':
+        pass
+        # TODO
+    elif grade == 'Very satisfied' and grade_secondary != 'Booked':
+        pass
+        # TODO
+    elif grade == 'Very dissatisfied':
+        pass
+        # TODO
 
     # wait for back button and click
     time.sleep(1)
@@ -74,6 +116,12 @@ def fill_form(driver, grade, grade_secondary, index):
     time.sleep(1)
     back_button.click()
     time.sleep(2)
+
+    # switch driver to iframe
+    iframe = WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.ID, 'google-hats-survey_parent-dialog-dom'))
+    )
+    driver.switch_to.frame(iframe)
 
 
 def get_final_index(n: int) -> int:

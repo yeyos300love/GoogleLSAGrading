@@ -57,3 +57,11 @@ def wait_and_find_element(driver, by, value, timeout=40):
         EC.element_to_be_clickable((by, value))
     )
     return element
+
+def cleanup_driver(driver):
+    if driver:
+        try:
+            driver.quit()
+        except Exception as e:
+            print(f"Error closing driver: {e}")
+            
