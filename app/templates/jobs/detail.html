@@ -49,7 +49,8 @@
                 <p>{{ completed_count }} / {{ job.total_records }} lead forms have been completed. This will open a browser.</p>
             </div>
             <div class="phase-card-actions">
-                <form method="POST" action="{{ url_for('jobs.form_completion', job_id=job.id) }}">
+                <!--<form method="POST" action="{{ url_for('jobs.form_completion', job_id=job.id) }}">-->
+                <form method="POST" action="{{ url_for('jobs.start_glsa', job_id=job.id) }}">
                     <button type="submit" class="service-button">Send to GLSA</button>
                 </form>
                 <form method="POST" action="{{ url_for('jobs.save', job_id=job.id) }}" onsubmit="return collectGrades(this)">
@@ -78,6 +79,7 @@
     <table id="results-table">
         <thead>
             <tr>
+                <th></th>
                 <th>Lead</th>
                 <th>Received</th>
                 <th>Status</th>
@@ -89,6 +91,8 @@
         <tbody>
             {% for customer in customers %}
             <tr>
+                <td style="display:none;">{{ customer.id }}</td>  <!-- hidden lead ID column -->
+                <td class="row-number">{{ loop.index }}</td>
                 <td>{{ customer.phone }}</td>
                 <td>{{ customer.received }}</td>
                 <td>
@@ -142,6 +146,7 @@
                         <button class="add-transcript-btn" 
                                 onclick="addTranscript(this)"
                                 data-phone="{{ customer.phone }}"
+                                data-lead-id="{{ customer.id }}"
                                 title="Add transcript">
                             Add
                         </button>
@@ -150,6 +155,7 @@
                             class="view-transcript-btn {% if customer.transcript.startswith('FAILED') %}failure{% elif customer.transcript.startswith('WARNING') %}warning{% endif %}"
                             data-transcript="{{ customer.transcript | escape }}"
                             data-phone="{{ customer.phone }}"
+                            data-lead-id="{{ customer.id }}"
                             onclick="showTranscript(this)"
                         >
                             View
@@ -176,7 +182,7 @@
     <p>No customer records found for this job.</p>
     {% endif %}
 
-    <p>pending → transcripts_fetched → analyzed → completed</p>
+    <p>pending → transcript_fetched → analyzed → completed</p>
 
 </center>
 
@@ -198,16 +204,17 @@
                     </svg>
                 </button>
                 <form method="POST" action="{{ url_for('jobs.save_transcript', job_id=job.id) }}" id="transcriptForm" style="display: none;" onsubmit="saveTranscript(event); return false;">
-                        <input type="hidden" name="phone" id="transcriptPhone">
-                        <input type="hidden" name="transcript" id="transcriptContent">
-                        <button type="submit" class="copy-button" title="Save transcript">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                                <polyline points="7 3 7 8 15 8"></polyline>
-                            </svg>
-                        </button>
-                    </form>
+                    <input type="hidden" name="phone" id="transcriptPhone">
+                    <input type="hidden" name="lead_id" id="transcriptLeadId">
+                    <input type="hidden" name="transcript" id="transcriptContent">
+                    <button type="submit" class="copy-button" title="Save transcript">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                    </button>
+                </form>
             </div>
             <button class="close" onclick="closeTranscript()">&times;</button>
         </div>

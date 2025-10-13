@@ -17,5 +17,6 @@ def process_csv_upload(path: str):
     filtered_names_df = filtered_df[filtered_df['Customer'] != '']
     
     # return list of tuples (customer, lead received)
-    return list(filtered_names_df[['Customer', 'Lead received']].itertuples(index=False, name=None))
+    # reverse order so earliest leads are first
+    return list(filtered_names_df[['Customer', 'Lead received']].itertuples(index=False, name=None))[::-1]
     #return filtered_names_df['Customer'].tolist()

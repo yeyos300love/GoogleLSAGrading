@@ -35,7 +35,13 @@ def upload():
     db.session.commit()
     # create customer records
     for lead, received in customers_leads:
-        db.session.add(Lead(job_id=job.id, phone=lead, received=received, status='pending'))
+        # check if lead with same phone already exists for this job
+        existing_lead = Lead.query.filter_by(job_id=job.id, phone=lead).first()
+        if existing_lead:
+            transcript = "WARNING • Duplicate customer\nThis is a duplicate lead."
+            db.session.add(Lead(job_id=job.id, phone=lead, received=received, status='transcript_fetched', transcript=transcript))
+        else:
+            db.session.add(Lead(job_id=job.id, phone=lead, received=received, status='pending'))
     db.session.commit()
 
     return redirect(url_for('jobs.detail', job_id=job.id))

@@ -30,7 +30,9 @@
   </a>
   {% endfor %}
 </div>
-</center>
+{% else %}
+  <p>No jobs have been started.</p>
 {% endif %}
+</center>
 
 {% endblock %}

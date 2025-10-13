@@ -26,19 +26,15 @@ body {
     color: var(--text-primary);
     padding-top: 60px; /* same as .top-nav height */
     /* overflow: hidden; ⛔ prevents any scroll */
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
 }
 
 
-
-
-
-
-
-
-
-
-
 /* ---------------------- 2fa styles ---------------------- */
+body.no-scroll {
+    overflow: hidden; /* ⛔ prevents any scroll */
+}
+
 #tfa-container {
     display: flex;
     justify-content: center;
@@ -47,7 +43,6 @@ body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: 'Inter', system-ui, sans-serif;
-    overflow: hidden; /* ⛔ prevents any scroll */
 }
 
 .tfa-box {
@@ -561,6 +556,19 @@ body.modal-open {
     }
 }
 
+.modal.editing {
+    background-color: #243249; /* subtle blue/gray tint for awareness */
+    /* box-shadow: -4px 0 20px rgba(88, 166, 255, 0.3); optional blue glow */
+}
+
+.modal.editing #transcriptText {
+    background-color: #1b2638; /* darker text area during edit */
+}
+
+.modal.editing .modal-header {
+    background-color: #1e293b;
+}
+
 
 /* ---------------------- table styles ---------------------- */
 #results-table {
@@ -634,6 +642,13 @@ body.modal-open {
 /* button cell styles */
 #results-table td:nth-child(6) {
     padding: 0;
+}
+
+.row-number {
+    text-align: center;
+    color: #666;
+    font-weight: 500;
+    width: 40px;
 }
 
 

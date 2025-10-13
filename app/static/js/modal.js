@@ -112,12 +112,14 @@ function enableEdit() {
     const transcriptText = document.getElementById('transcriptText');
     const editButton = document.getElementById('editButton');
     const saveForm = document.getElementById('transcriptForm');
+    const modal = document.querySelector('.modal');
     
     transcriptText.contentEditable = true;
     transcriptText.focus();
     
     editButton.style.display = 'none';
     saveForm.style.display = 'flex';
+    modal.classList.add('editing'); // 🟡 highlight edit mode
 }
 
 function saveTranscript(event) {
@@ -127,20 +129,26 @@ function saveTranscript(event) {
     const activeButton = document.querySelector('.view-transcript-btn.active, .add-transcript-btn.active');
     
     if (!activeButton) return;
+
+    const leadId = activeButton.dataset.leadId;
     
     document.getElementById('transcriptPhone').value = activeButton.dataset.phone;
+    document.getElementById('transcriptLeadId').value = leadId;
     document.getElementById('transcriptContent').value = transcriptText.textContent;
     
     document.getElementById('transcriptForm').submit();
 }
-// Reopen modal after save
+// reopen modal after save
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const reopenPhone = urlParams.get('reopen');
+    //const reopenPhone = urlParams.get('reopen');
+    const reopenLeadId = urlParams.get('reopen');
     
-    if (reopenPhone) {
+    if (reopenLeadId) {
         // Find the button with matching phone number (either view or add)
-        const button = document.querySelector(`.view-transcript-btn[data-phone="${reopenPhone}"], .add-transcript-btn[data-phone="${reopenPhone}"]`);
+        //const button = document.querySelector(`.view-transcript-btn[data-phone="${reopenPhone}"], .add-transcript-btn[data-phone="${reopenPhone}"]`);
+        // Find the button with matching lead (either view or add)
+        const button = document.querySelector(`.view-transcript-btn[data-lead-id="${reopenLeadId}"], .add-transcript-btn[data-lead-id="${reopenLeadId}"]`);
         if (button) {
             if (button.classList.contains('add-transcript-btn')) {
                 addTranscript(button);
@@ -191,6 +199,9 @@ function addTranscript(buttonElement) {
     
     // Update title
     modalTitle.textContent = `${phoneNumber} - Add Transcript`;
+
+    // Change background when editing
+    modal.classList.add('editing'); // 🟡 highlight edit mode
     
     // Show modal
     modal.classList.add('show');

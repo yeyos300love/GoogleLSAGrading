@@ -33,6 +33,7 @@
 <script>
     // Pass job_id and action to the external JS
     window.jobId = "{{ job.id }}";
+    document.body.classList.add('no-scroll');
 </script>
 <script src="{{ url_for('static', filename='js/2fa.js') }}"></script>
 
