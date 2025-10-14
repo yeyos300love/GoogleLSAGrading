@@ -17,7 +17,34 @@ Hosting on Replit
 python main.py
 ```
 
-## 2. Architecture
+## 2. Developer Notes
+
+### 2.1 Virtual Enviornment
+Setup
+```bash
+python -m venv glsag_app_env
+```
+Activate: Command Prompt (cmd)
+```bash
+glsag_app_env\Scripts\activate
+```
+Activate: Powershell (ps)
+```bash
+.\glsag_app_env\Scripts\Activate.ps1
+```
+Install Dependancies
+```bash
+pip install -r requirements.txt
+```
+```bash
+playwright install
+```
+Deactivate
+```bash
+deactivate
+```
+
+### 2.2 Architecture
 
 ```
 GoogleLSAGrading/
@@ -90,31 +117,4 @@ GoogleLSAGrading/
 ├── uploads/                        # temporary CSV storage (gitignored)
 └── instance/
     └── pipeline.db                 # SQLite database (gitignored)
-```
-
-## 3. Developer Notes
-
-### 3.1 Virtual Enviornment
-Setup
-```bash
-python -m venv glsag_app_env
-```
-Activate: Command Prompt (cmd)
-```bash
-glsag_app_env\Scripts\activate
-```
-Activate: Powershell (ps)
-```bash
-.\glsag_app_env\Scripts\Activate.ps1
-```
-Install Dependancies
-```bash
-pip install -r requirements.txt
-```
-```bash
-playwright install
-```
-Deactivate
-```bash
-deactivate
 ```
