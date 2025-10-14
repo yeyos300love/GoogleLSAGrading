@@ -92,6 +92,9 @@ document.addEventListener('click', function(event) {
     // Do NOT close if clicking a transcript button (view or add)
     if (event.target.closest('.view-transcript-btn, .add-transcript-btn')) return;
 
+    // Do NOT close if clicking grade dropdowns
+    if (event.target.closest('.grade-select, .grade-secondary-select')) return;
+
     // Close only if click is outside the modal
     if (!modal.contains(event.target)) {
         closeTranscript();
