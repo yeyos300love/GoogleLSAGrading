@@ -1,0 +1,13 @@
+<nav class="top-nav">
+    <div class="nav-items">
+        <a href="{{ url_for('dashboard.index') }}" 
+           class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+           Dashboard
+        </a>
+        <span class="divider">|</span>
+        <a href="{{ url_for('jobs.list_jobs') }}" 
+           class="nav-item {% if request.endpoint == 'jobs.list_jobs' %}active{% endif %}">
+           Jobs
+        </a>
+    </div>
+</nav>

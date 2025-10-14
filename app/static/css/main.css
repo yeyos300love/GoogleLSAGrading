@@ -1,0 +1,823 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/*:root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #363636;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --border-color: #404040;
+    --table-header: #242424;
+    --accent-color: #4CAF50;
+}*/
+:root {
+    --bg-primary: #0d1117;       /* main background */
+    --bg-secondary: #161b22;     /* secondary panels/cards */
+    --bg-tertiary: #21262d;      /* tertiary elements / hover backgrounds */
+    --text-primary: #ffffff;     /* main text */
+    --text-secondary: #b3b3b3;   /* secondary text / muted */
+    --border-color: #30363d;     /* borders / dividers */
+    --table-header: #12161b;     /* table header background */
+    --accent-color: #58a6ff;     /* buttons, links, highlights */
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding-top: 60px; /* same as .top-nav height */
+    /* overflow: hidden; ⛔ prevents any scroll */
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+}
+
+
+/* ---------------------- 2fa styles ---------------------- */
+body.no-scroll {
+    overflow: hidden; /* ⛔ prevents any scroll */
+}
+
+#tfa-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.tfa-box {
+    background-color: var(--bg-secondary);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    border: 1px solid var(--border-color);
+    width: 360px;
+    max-width: 90%;
+    transition: all 0.3s ease;
+}
+/*
+.tfa-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+*/
+/* ===== Text ===== */
+.tfa-box h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.tfa-box p {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* ===== Input ===== */
+.tfa-box input[type="text"] {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 18px;
+    letter-spacing: 4px;
+    text-align: center;
+    width: 100%;
+    outline: none;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
+}
+
+.tfa-box input[type="text"]:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 6px rgba(88, 166, 255, 0.5);
+}
+
+.tfa-button {
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.tfa-button:hover {
+    background-color: #3160a0; /* slightly darker accent for hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tfa-button:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ---------------------- grade dropdown styles ---------------------- */
+.grade-select,
+.grade-secondary-select {
+    width: 250px; /* fixed width for largest option */
+    padding: 4px 8px;
+    height: 30px;
+    line-height: 30px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+/* Disabled dropdowns */
+.grade-select:disabled,
+.grade-secondary-select:disabled {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+/* Options styling */
+.grade-select option,
+.grade-secondary-select option {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 4px 8px;
+    font-size: 14px;
+}
+
+/* Hover/focus effect on options */
+.grade-select option:hover,
+.grade-select option:focus,
+.grade-secondary-select option:hover,
+.grade-secondary-select option:focus {
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+}
+
+/* Optional: failure-grade styling */
+.grade-select.failure-grade,
+.grade-secondary-select.failure-grade {
+    background-color: rgba(255, 68, 68, 0.1);
+}
+
+.grade-select.failure-grade option:first-child,
+.grade-secondary-select.failure-grade option:first-child {
+    color: #ff4444;
+    font-style: italic;
+}
+
+
+/* ---------------------- save button ---------------------- */
+/* save grade dropdowns to database */
+.save-button {
+    background-color: #888888;
+    color: var(--text-primary);
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.save-button:hover {
+    background-color: #363636; /* slightly darker accent for hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+}
+
+.save-button:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ---------------------- service button ---------------------- */
+/* fetch podium scripts, run sentiment analysis, send to glsa */
+.service-button {
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.service-button:hover {
+    background-color: #3160a0; /* slightly darker accent for hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+}
+
+.service-button:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ---------------------- csv upload button form ---------------------- */
+#csvForm button {
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+#csvForm button:hover {
+    background-color: #3160a0; /* slightly darker accent for hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+}
+
+#csvForm button:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ---------------------- tooltip ---------------------- */
+/* hover over button to display hidden text */
+/* container */
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* tooltip styles */
+.tooltip {
+    visibility: hidden;
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 100;
+}
+
+/* show tooltip on hover */
+.tooltip-container:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+/* ---------------------- transcript view button ---------------------- */
+.view-transcript-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background-color: #10b981;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.view-transcript-btn:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.view-transcript-btn.failure {
+    background-color: #ef4444;
+}
+
+.view-transcript-btn.failure:hover {
+    background-color: #dc2626;
+}
+
+.view-transcript-btn.warning {
+    background-color: #f59e0b;
+}
+
+.view-transcript-btn.warning:hover {
+    background-color: #d97706;
+}
+
+.view-transcript-btn.active {
+    background-color: #065f46;
+    outline: 2px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.view-transcript-btn.failure.active {
+    background-color: #991b1b;
+    outline: 2px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.view-transcript-btn.warning.active {
+    background-color: #92400e;
+    outline: 2px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+
+/* ---------------------- transcript add button ---------------------- */
+.add-transcript-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background-color: #888888;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.add-transcript-btn:hover {
+    background-color: #363636;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.add-transcript-btn.active {
+    background-color: #1f1f1f;
+    outline: 2px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+
+/* ---------------------- modal styles ---------------------- */ 
+.modal {
+    position: fixed;
+    right: -40%;
+    top: 0;
+    width: 40%;
+    height: 100vh;
+    background-color: #1f2937;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.show {
+    right: 0;
+}
+
+.modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    background-color: #111827;
+    border-bottom: 1px solid #374151;
+}
+
+.title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.title-group h4 {
+    margin: 0;
+    color: #f9fafb;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.copy-button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background-color: #374151;
+    color: #f9fafb;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+    background-color: #4b5563;
+}
+
+.copy-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.copy-button.copied {
+    background-color: #10b981;
+}
+
+.close {
+    width: 36px;
+    height: 36px;
+    font-size: 28px;
+    color: #f9fafb;
+    cursor: pointer;
+    background: #374151;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.close:hover {
+    background-color: #ef4444;
+    transform: scale(1.05);
+}
+
+/* transcript text */
+#transcriptText {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0;
+    padding: 25px;
+    background-color: #111827;
+    color: #e5e7eb;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+}
+
+/* text scrollbar styling */
+#transcriptText::-webkit-scrollbar {
+    width: 8px;
+}
+
+#transcriptText::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+#transcriptText::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+#transcriptText::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* highlighted row when viewing transcript */
+tr.viewing-transcript {
+    background-color: var(--bg-tertiary) !important;
+    outline: 2px solid var(--accent-color);
+}
+
+tr.viewing-transcript td {
+    color: white;
+}
+
+/* responsive design */
+@media (max-width: 1200px) {
+    .modal {
+        width: 50%;
+        right: -50%;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal {
+        width: 100%;
+        right: -100%;
+    }
+}
+
+body.modal-open {
+    margin-right: 40%;
+    transition: margin-right 0.3s ease;
+}
+
+@media (max-width: 1200px) {
+    body.modal-open {
+        margin-right: 50%;
+    }
+}
+
+@media (max-width: 768px) {
+    body.modal-open {
+        margin-right: 0; /* Don't push on mobile */
+    }
+}
+
+.modal.editing {
+    background-color: #243249; /* subtle blue/gray tint for awareness */
+    /* box-shadow: -4px 0 20px rgba(88, 166, 255, 0.3); optional blue glow */
+}
+
+.modal.editing #transcriptText {
+    background-color: #1b2638; /* darker text area during edit */
+}
+
+.modal.editing .modal-header {
+    background-color: #1e293b;
+}
+
+
+/* ---------------------- table styles ---------------------- */
+#results-table {
+    margin: 20px auto;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    table-layout: fixed;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+#results-table thead {
+    display: table-header-group;
+}
+
+#results-table tbody {
+    display: table-row-group;
+    /* max-height: calc(100vh - 300px); */
+    overflow-y: auto;
+}
+
+/* table cell and header styles */
+#results-table th,
+#results-table td {
+    position: relative;
+    padding: 0 12px;
+    height: 30px;
+    min-height: 30px;
+    max-height: 60px;
+    line-height: 30px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 14px;
+    font-weight: normal;
+    box-sizing: border-box;
+}
+
+/* header specific styles */
+#results-table th {
+    background-color: var(--table-header);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* regular cell content styles */
+#results-table td {
+    overflow: visible;
+}
+
+/* text-only cell styles */
+#results-table td:nth-child(1),
+#results-table td:nth-child(2),
+#results-table td:nth-child(3) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* dropdown cell styles */
+#results-table td:nth-child(4),
+#results-table td:nth-child(5) {
+    padding: 0;
+    position: relative;
+    overflow: visible;
+    background-color: var(--bg-tertiary);
+}
+
+/* button cell styles */
+#results-table td:nth-child(6) {
+    padding: 0;
+}
+
+.row-number {
+    text-align: center;
+    color: #666;
+    font-weight: 500;
+    width: 40px;
+}
+
+
+/* ---------------------- phase card styles ---------------------- */
+/* pending, transcripts_fetched, analyzed, completed on details page */
+.phase-card {
+    display: flex;
+    flex-direction: row; 
+    align-items: center; /* vertically center the content and buttons */
+    justify-content: space-between; /* pushes content to the left and actions to the right */
+
+    background-color: var(--bg-secondary); /*#242424*/
+    color: var(--text-primary);
+    padding: 18px 22px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    max-width: 50%; 
+    margin: 20px auto; 
+}
+
+.phase-card-content {
+    text-align: left;
+    /* Make this container a flex column to stack the h2 and p tags */
+    display: flex;
+    flex-direction: column;
+    /* This 'gap' now handles the space between the <h2> and <p> */
+    gap: 4px; /* Adjust this value as needed for space between title and text */
+    /* Allow the content to take up most of the space */
+    flex-grow: 1; 
+    /* Add some margin to the right to create space before the button(s) */
+    margin-right: 20px;
+}
+
+.phase-card-actions {
+    /* If you have multiple buttons, this makes them stack horizontally */
+    display: flex;
+    gap: 10px; /* Space between multiple buttons */
+    /* Ensure this section doesn't shrink and can hold the buttons */
+    flex-shrink: 0; 
+}
+
+.phase-card h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.phase-card p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+
+/* ---------------------- job card styles ---------------------- */
+#jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 20px auto;
+    max-width: 800px;
+}
+
+/* clickable job card */
+.job-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 18px 22px;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.job-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* left side */
+.job-title {
+  font-size: 22px;
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-status {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+/* right side */
+.job-right {
+    text-align: right;
+    gap: 4px;
+    display: flex;
+    flex-direction: column;
+}
+
+.job-records,
+.job-id {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.job-card .status-pending::before {
+  content: "⚪ ";
+}
+.job-card .status-transcripts_fetched::before {
+  content: "🟠 ";
+}
+.job-card .status-analyzed::before {
+  content: "🔵 ";
+}
+.job-card .status-completed::before {
+  content: "🟢 ";
+}
+
+
+/* ---------------------- navigation bar styles ---------------------- */
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: var(--bg-secondary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+.nav-items {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* spacing between links and dividers */
+}
+
+.nav-item {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
+}
+
+.divider {
+    color: var(#bdc3c7);
+    opacity: 0.5;
+}
+
+.nav-item:hover {
+    color: var(--accent-color);
+}
+
+.nav-item.active {
+    color: var(--accent-color);
+    font-weight: 600;
+}

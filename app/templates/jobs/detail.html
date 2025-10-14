@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Job Detail: {{ job.id }}{% endblock %}
+
+{% block content %}
+
+<center>
+    <h1>{{ job.csv_filename}}</h1>
+    <p>Job ID: {{ job.id }}, Total: {{ job.total_records }}</p>
+
+    <!-- phase 1: fetch transcripts -->
+    {% if job.status == 'pending' %}
+        <div class="phase-card">
+            <div class="phase-card-content">
+                <h2>Step 1:🔍 Fetch Transcripts from Podium</h2>
+                <p>{{ fetched_count }} / {{ job.total_records }} transcripts have been fetched. Podium will open in a headless browser.</p>
+            </div>
+            <div class="phase-card-actions">
+                <!-- <a href="{{ url_for('jobs.start_podium', job_id=job.id) }}" class="btn btn-primary">Start Podium Fetch</a> -->
+                <form method="POST" action="{{ url_for('jobs.start_podium', job_id=job.id) }}">
+                    <button type="submit" class="service-button">Start Podium Fetch</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+    <!-- phase 2: sentiment analysis -->
+    {% if job.status == 'transcripts_fetched' %}
+    <div class="phase-card">
+            <div class="phase-card-content">
+                <h2>Step 2:🧠 Analyze Sentiments</h2>
+                <p>{{ analyzed_count }} / {{ job.total_records }} transcripts have been analyzed.</p>
+            </div>
+            <div class="phase-card-actions">
+                <form method="POST" action="{{ url_for('jobs.analyze_all', job_id=job.id) }}">
+                    <button type="submit" class="service-button">Analyze</button>
+                </form>
+                <form method="POST" action="{{ url_for('jobs.save', job_id=job.id) }}" onsubmit="return collectGrades(this)">
+                    <button type="submit" class="save-button">Save</button>
+                </form>
+            </div>
+    </div>
+
+    {% endif %}
+    <!-- phase 3: submit to google -->
+    {% if job.status == 'analyzed' %}
+    <div class="phase-card">
+            <div class="phase-card-content">
+                <h2>Step 3:📤 Submit to Google Forms</h2>
+                <p>{{ completed_count }} / {{ job.total_records }} lead forms have been completed. This will open a browser.</p>
+            </div>
+            <div class="phase-card-actions">
+                <!--<form method="POST" action="{{ url_for('jobs.form_completion', job_id=job.id) }}">-->
+                <form method="POST" action="{{ url_for('jobs.start_glsa', job_id=job.id) }}">
+                    <button type="submit" class="service-button">Send to GLSA</button>
+                </form>
+                <form method="POST" action="{{ url_for('jobs.save', job_id=job.id) }}" onsubmit="return collectGrades(this)">
+                    <button type="submit" class="save-button">Save</button>
+                </form>
+            </div>
+    </div>
+    {% endif %}
+
+    {% if job.status == 'completed' %}
+    <div class="phase-card">
+            <div class="phase-card-content">
+                <h2>✅ Pipeline Complete!</h2>
+                <p>All {{ job.total_records }} customers fully processed.</p>
+            </div>
+            <div class="phase-card-actions">
+                <a href="/list-jobs" class="service-button">See All Jobs</a>
+                <a href="/" class="service-button">Dashboard</a>
+            </div>
+    </div>
+    {% endif %}
+
+    <!-- <h2>Leads Table</h2> -->
+
+    {% if customers %}
+    <table id="results-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Lead</th>
+                <th>Received</th>
+                <th>Status</th>
+                <th>Grade</th>
+                <th>Grade Secondary</th>
+                <th>Transcript</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td style="display:none;">{{ customer.id }}</td>  <!-- hidden lead ID column -->
+                <td class="row-number">{{ loop.index }}</td>
+                <td>{{ customer.phone }}</td>
+                <td>{{ customer.received }}</td>
+                <td>
+                    <span class="status-{{ customer.status }}">
+                        {{ customer.status }}
+                    </span>
+                </td>
+                <td>
+                    {% if job.status == 'pending' %}
+                        <!-- phase 1: disabled -->
+                        <select class="grade-select" disabled>
+                            <option>N/A</option>
+                        </select>
+                    {% else %}
+                        <!-- phase 2+: enabled dropdown -->
+                        <select 
+                            class="grade-select" 
+                            data-customer-id="{{ customer.id }}"
+                            onchange="handleGradeChange(this)"
+                        >
+                            <option value="" disabled selected hidden>Select Grade</option>
+                            <option value="Very satisfied" {% if customer.grade == 'Very satisfied' %}selected{% endif %}>Very satisfied</option>
+                            <option value="Somewhat satisfied" {% if customer.grade == 'Somewhat satisfied' %}selected{% endif %}>Somewhat satisfied</option>
+                            <option value="Neither satisfied nor dissatisfied" {% if customer.grade == 'Neither satisfied nor dissatisfied' %}selected{% endif %}>Neither satisfied nor dissatisfied</option>
+                            <option value="Somewhat dissatisfied" {% if customer.grade == 'Somewhat dissatisfied' %}selected{% endif %}>Somewhat dissatisfied</option>
+                            <option value="Very dissatisfied" {% if customer.grade == 'Very dissatisfied' %}selected{% endif %}>Very dissatisfied</option>
+                        </select>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if job.status == 'pending' %}
+                        <!-- phase 1: disabled -->
+                        <select class="grade-secondary-select" disabled>
+                            <option value="" disabled selected>N/A</option>
+                        </select>
+                    {% else %}
+                        <!-- phase 2+: dynamic secondary (JS will populate options) -->
+                        <select 
+                            class="grade-secondary-select" 
+                            data-customer-id="{{ customer.id }}"
+                            data-saved-value="{{ customer.grade_secondary or '' }}"
+                            onchange="handleSecondaryGradeChange(this)"
+                            {% if not customer.grade %}disabled{% endif %}
+                        >
+                            <option value="" disabled selected hidden>Select Secondary Grade</option>
+                        </select>
+                    {% endif %}
+                </td>               
+                <td>
+                    {% if job.status == 'pending' and customer.status == 'pending' %}
+                        <button class="add-transcript-btn" 
+                                onclick="addTranscript(this)"
+                                data-phone="{{ customer.phone }}"
+                                data-lead-id="{{ customer.id }}"
+                                title="Add transcript">
+                            Add
+                        </button>
+                    {% else %}
+                        <button 
+                            class="view-transcript-btn {% if customer.transcript.startswith('FAILED') %}failure{% elif customer.transcript.startswith('WARNING') %}warning{% endif %}"
+                            data-transcript="{{ customer.transcript | escape }}"
+                            data-phone="{{ customer.phone }}"
+                            data-lead-id="{{ customer.id }}"
+                            onclick="showTranscript(this)"
+                        >
+                            View
+                        </button>
+                    {% endif %}
+                    <!--{% if customer.transcript %}
+                        <button 
+                            class="view-transcript-btn {% if customer.transcript.startswith('FAILED') %}failure{% elif customer.transcript.startswith('WARNING') %}warning{% endif %}"
+                            data-transcript="{{ customer.transcript | escape }}"
+                            data-phone="{{ customer.phone }}"
+                            onclick="showTranscript(this)"
+                        >
+                            View
+                        </button>
+                    {% else %}
+                        <em class="not-fetched">Not fetched</em>
+                    {% endif %}-->
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No customer records found for this job.</p>
+    {% endif %}
+
+    <p>pending → transcript_fetched → analyzed → completed</p>
+
+</center>
+
+<div id="transcriptModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="title-group">
+                <h4 id="modalTitle">Transcript</h4>
+                <button class="copy-button" onclick="copyTranscript()" title="Copy transcript">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                </button>
+                <button class="copy-button" id="editButton" onclick="enableEdit()" title="Edit transcript">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <form method="POST" action="{{ url_for('jobs.save_transcript', job_id=job.id) }}" id="transcriptForm" style="display: none;" onsubmit="saveTranscript(event); return false;">
+                    <input type="hidden" name="phone" id="transcriptPhone">
+                    <input type="hidden" name="lead_id" id="transcriptLeadId">
+                    <input type="hidden" name="transcript" id="transcriptContent">
+                    <button type="submit" class="copy-button" title="Save transcript">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            <button class="close" onclick="closeTranscript()">&times;</button>
+        </div>
+        <pre id="transcriptText"></pre>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/grade-dropdown.js') }}"></script>
+<script src="{{ url_for('static', filename='js/grade-save.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Podium - Form Completion{% endblock %}
+
+{% block content %}
+
+<center>
+<h1>Form completion has started but first...</h1>
+
+<!-- 2FA Input (shows initially, hides after submit) -->
+<div id="tfa-container" style="display: block;">
+    <div class="tfa-box">
+        <h2>Perform reCAPTCHA & 2FA</h2>
+        <h2>Ensure account selector is visible</h2>
+        <p>Then we can submit those forms</p>
+        <button onclick="submitTuring()" class="tfa-button">Continue</button>
+    </div>
+</div>
+
+</center>
+
+<script>
+    // Pass job_id and action to the external JS
+    window.jobId = "{{ job.id }}";
+    document.body.classList.add('no-scroll');
+</script>
+<script src="{{ url_for('static', filename='js/turing-test.js') }}"></script>
+
+{% endblock %}

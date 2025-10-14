@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Podium - Fetch Transcripts{% endblock %}
+
+{% block content %}
+
+<center>
+<h1>Transcript fetching has started but first...</h1>
+
+<!-- 2FA Input (shows initially, hides after submit) -->
+<div id="tfa-container" style="display: block;">
+    <div class="tfa-box">
+        <h2>Let's get you logged into Podium...</h2>
+        <p>Check email for 6-digit code</p>
+        <input 
+            type="text" 
+            id="tfa-code"
+            maxlength="6" 
+            placeholder="000000" 
+            autofocus 
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+        />
+        <button onclick="submit2FA()" class="tfa-button">Submit Code</button>
+    </div>
+</div>
+
+</center>
+
+<script>
+    // Pass job_id and action to the external JS
+    window.jobId = "{{ job.id }}";
+    document.body.classList.add('no-scroll');
+</script>
+<script src="{{ url_for('static', filename='js/2fa.js') }}"></script>
+
+{% endblock %}
