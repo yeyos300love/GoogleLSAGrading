@@ -126,13 +126,22 @@ body.no-scroll {
 .grade-secondary-select {
     width: 250px; /* fixed width for largest option */
     padding: 4px 8px;
+    /*
     height: 30px;
+
     line-height: 30px;
+    font-size: 14px;
+    */
+    height: 36px;
+    min-height: 36px;
+    line-height: 36px;
+    font-size: 15px;
+    
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    font-size: 14px;
+    
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
@@ -596,13 +605,18 @@ body.modal-open {
 #results-table td {
     position: relative;
     padding: 0 12px;
-    height: 30px;
-    min-height: 30px;
     max-height: 60px;
-    line-height: 30px;
+
+    /*height: 30px;
+    min-height: 30px;
+    line-height: 30px;*/
+    height: 36px;
+    min-height: 36px;
+    line-height: 36px;
+
     border: 1px solid var(--border-color);
     text-align: center;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: normal;
     box-sizing: border-box;
 }
@@ -624,15 +638,17 @@ body.modal-open {
 /* text-only cell styles */
 #results-table td:nth-child(1),
 #results-table td:nth-child(2),
-#results-table td:nth-child(3) {
+#results-table td:nth-child(3),
+#results-table td:nth-child(4),
+#results-table td:nth-child(5) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 /* dropdown cell styles */
-#results-table td:nth-child(4),
-#results-table td:nth-child(5) {
+#results-table td:nth-child(6),
+#results-table td:nth-child(7) {
     padding: 0;
     position: relative;
     overflow: visible;
@@ -640,7 +656,7 @@ body.modal-open {
 }
 
 /* button cell styles */
-#results-table td:nth-child(6) {
+#results-table td:nth-child(8) {
     padding: 0;
 }
 

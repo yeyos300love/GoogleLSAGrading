@@ -8,7 +8,7 @@ import time
 
 
 def start_podium_subprocess():
-    driver = create_driver()
+    driver = create_driver(headless=True)
     driver.get(current_app.config['PODIUM_URL'])
 
     # login
@@ -53,14 +53,18 @@ def search_number(driver, num: str):
 
     try:
         # select first call
+        # //*[@id="app-content-area"]/div/div/div[2]/div/div/div/div[ith call]/div/div[3]
         wait_and_find_element(driver, By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div/div/div[1]/div/div[3]').click()
+        # call date & time 
+       #wait_and_find_element(driver, By.XPATH, '//*[@id="app-content-area"]/div/div/div[2]/div/div/div/div[1]/div/div[3]/div[1]/span/p').text
         try:
             # get transcript
-            transcript_list =WebDriverWait(driver, 40).until(
+            transcript_element =WebDriverWait(driver, 40).until(
                 EC.presence_of_element_located((By.XPATH, '//*[@id="app-container"]/div[5]/div/div[2]/div[2]/div/div[2]/div[2]'))
-            ).text.split('\n')[2:]
-            if not transcript_text or all(not line.strip() for line in transcript_text):
-                transcript_text = ['FAILED', 'No content', 'Check call box to see why it is blank.']
+            )
+            transcript_list = transcript_element.text.split('\n')[2:]
+            if not transcript_list or all(not line.strip() for line in transcript_list):
+                transcript_list = ['FAILED', 'No content', 'Check call box to see why it is blank.']
         except:
             transcript_list = ['FAILED', 'No transcript text', 'Ensure call box selected is the correct one.']
     except:
@@ -72,6 +76,7 @@ def search_number(driver, num: str):
     wait_and_find_element(driver, By.XPATH, '//*[@id="app-content-area"]/div/div/div[1]/div[1]/div/div[1]/input').send_keys(Keys.DELETE)
 
     return process_transcript(transcript_list)
+
 
 def process_transcript(transcript_list):
     transcript = []   
@@ -99,5 +104,5 @@ def process_transcript(transcript_list):
         j += 1
         
     # group data as [name, time, text]
-    transcript = [transcript_list[k:k+3] for k in range(0, len(transcript_list), 3)]
-    return "\n\n".join(f"{element[0]} • {element[1]}\n{element[2]}" for element in transcript) #string
+    grouped = [transcript[k:k+3] for k in range(0, len(transcript), 3)]
+    return "\n\n".join(f"{element[0]} • {element[1]}\n{element[2]}" for element in grouped) #string
