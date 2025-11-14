@@ -219,6 +219,25 @@ body.no-scroll {
     box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
 }
 
+.save-reminder {
+    position: fixed;
+    bottom: -60px;
+    /* left: 50%;
+    transform: translateX(-50%);*/
+    background: #363636; /*#f59e0b;*/
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px 8px 8px 8px;
+    font-weight: 500;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    transition: bottom 0.3s ease;
+    z-index: 1000;
+}
+
+.save-reminder.show {
+    bottom: 12px;  /* instead of 0 so it has breathing room */
+}
+
 
 /* ---------------------- service button ---------------------- */
 /* fetch podium scripts, run sentiment analysis, send to glsa */
