@@ -20,32 +20,41 @@ const GRADE_SECONDARY_NEG = [
     "Other"
 ];
 
+function showSaveReminder() {
+    let footer = document.getElementById('save-reminder-footer');
+    if (!footer) {
+        footer = document.createElement('div');
+        footer.id = 'save-reminder-footer';
+        footer.className = 'save-reminder show';
+        footer.innerHTML = '⚠️ Changes detected. Please save ⚠️';
+        document.body.appendChild(footer);
+    }
+}
+
 function handleGradeChange(gradeSelect) {
     const row = gradeSelect.closest('tr');
     const secondarySelect = row.querySelector('.grade-secondary-select');
     const grade = gradeSelect.value;
     
+    showSaveReminder();
+    
     // Clear and reset secondary dropdown
     secondarySelect.innerHTML = '';
     
     if (!grade || grade === '') {
-        // No grade selected - disable and show placeholder
         secondarySelect.disabled = true;
         secondarySelect.innerHTML = '<option value="" disabled selected>Select Secondary Grade</option>';
         return;
     }
     
     if (grade === 'Neither satisfied nor dissatisfied') {
-        // Neutral grade - disable and show N/A
         secondarySelect.disabled = true;
         secondarySelect.innerHTML = '<option value="" disabled selected>N/A</option>';
         return;
     }
     
-    // Enable dropdown
     secondarySelect.disabled = false;
     
-    // Determine which options to show
     let options = [];
     if (grade === 'Very satisfied' || grade === 'Somewhat satisfied') {
         options = GRADE_SECONDARY_POS;
@@ -53,7 +62,6 @@ function handleGradeChange(gradeSelect) {
         options = GRADE_SECONDARY_NEG;
     }
     
-    // Build dropdown options
     secondarySelect.innerHTML = '<option value="" disabled selected>Select Secondary Grade</option>' +
         options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
 }
@@ -65,27 +73,42 @@ function handleSecondaryGradeChange(secondarySelect) {
     const grade = gradeSelect.value;
     const gradeSecondary = secondarySelect.value;
     
+    showSaveReminder();
+    
     console.log('Secondary grade changed:', { customerId, grade, gradeSecondary });
-    // Database save will be handled by save button later
 }
 
 // Initialize on page load - set up any pre-selected grades
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.grade-select').forEach(select => {
-        // If a grade is already selected, trigger the cascade
         if (!select.disabled && select.value && select.value !== '') {
-            handleGradeChange(select);
-            
-            // Restore the secondary selection if it exists
             const row = select.closest('tr');
             const secondarySelect = row.querySelector('.grade-secondary-select');
-            const savedSecondary = secondarySelect.dataset.savedValue;
+            const grade = select.value;
             
-            if (savedSecondary) {
-                // Wait a tick for options to populate
-                setTimeout(() => {
+            // Manually populate secondary without triggering change
+            secondarySelect.innerHTML = '';
+            
+            if (grade === 'Neither satisfied nor dissatisfied') {
+                secondarySelect.disabled = true;
+                secondarySelect.innerHTML = '<option value="" disabled selected>N/A</option>';
+            } else {
+                secondarySelect.disabled = false;
+                
+                let options = [];
+                if (grade === 'Very satisfied' || grade === 'Somewhat satisfied') {
+                    options = GRADE_SECONDARY_POS;
+                } else if (grade === 'Somewhat dissatisfied' || grade === 'Very dissatisfied') {
+                    options = GRADE_SECONDARY_NEG;
+                }
+                
+                secondarySelect.innerHTML = '<option value="" disabled selected>Select Secondary Grade</option>' +
+                    options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                
+                const savedSecondary = secondarySelect.dataset.savedValue;
+                if (savedSecondary) {
                     secondarySelect.value = savedSecondary;
-                }, 0);
+                }
             }
         }
     });
