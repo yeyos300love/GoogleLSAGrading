@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<center>
+<h1>Settings</h1>
+<p>Adjust App Settings</p>
+
+<div id="jobs-list">
+  <a href="#" class="job-card" onclick="openPromptModal()">
+    
+    <div class="job-left">
+      <h3 class="job-title">Edit System Prompt</h3>
+    </div>
+
+    <div class="job-right">
+      <div class="job-status">
+        <span class="status-Analyzed">Sentiment Analysis</span>
+      </div>
+
+      <div class="job-meta">
+          <p class="job-records">Model: o3-mini</p>
+          <p class="job-id">OpenAI</p>
+      </div>
+    </div>
+  </a>
+</div>  
+
+</center>
+
+<div id="promptModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="title-group">
+                <h4 id="promptModalTitle">Edit System Prompt</h4>
+                <button class="copy-button" id="editButton" onclick="enablePromptEdit()" title="Edit prompt">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <form method="POST" id="promptForm" style="display: none;" onsubmit="savePrompt(event); return false;">
+                    <input type="hidden" name="prompt" id="promptContent">
+                    <button type="submit" class="copy-button" title="Save prompt">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            <button class="close" onclick="closePromptModal()">&times;</button>
+        </div>
+        <pre id="promptText"></pre>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/edit-prompt.js') }}"></script>
+{% endblock %}

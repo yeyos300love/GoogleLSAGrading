@@ -2,12 +2,17 @@
     <div class="nav-items">
         <a href="{{ url_for('dashboard.index') }}" 
            class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
-           Dashboard
+           Home <!-- named "Home" but uses dashboard routes backend -->
         </a>
         <span class="divider">|</span>
         <a href="{{ url_for('jobs.list_jobs') }}" 
            class="nav-item {% if request.endpoint == 'jobs.list_jobs' %}active{% endif %}">
-           Jobs
+           Dashboard <!-- named "Dashboard" but uses job routes backend -->
+        </a>
+        <span class="divider">|</span>
+        <a href="{{ url_for('settings.list_options') }}" 
+           class="nav-item {% if request.endpoint == 'settings.list_options' %}active{% endif %}">
+           Settings
         </a>
     </div>
 </nav>

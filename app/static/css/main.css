@@ -489,8 +489,8 @@ body.no-scroll {
     transform: scale(1.05);
 }
 
-/* transcript text */
-#transcriptText {
+/* transcript & prompt text*/
+#transcriptText, #promptText {
     flex: 1;
     overflow-y: auto;
     margin: 0;
@@ -506,20 +506,20 @@ body.no-scroll {
 }
 
 /* text scrollbar styling */
-#transcriptText::-webkit-scrollbar {
+#transcriptText::-webkit-scrollbar, #promptText::-webkit-scrollbar {
     width: 8px;
 }
 
-#transcriptText::-webkit-scrollbar-track {
+#transcriptText::-webkit-scrollbar-track, #promptText::-webkit-scrollbar-track {
     background: #1f2937;
 }
 
-#transcriptText::-webkit-scrollbar-thumb {
+#transcriptText::-webkit-scrollbar-thumb, #promptText::-webkit-scrollbar-thumb {
     background: #4b5563;
     border-radius: 4px;
 }
 
-#transcriptText::-webkit-scrollbar-thumb:hover {
+#transcriptText::-webkit-scrollbar-thumb:hover, #promptText::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
 }
 
@@ -570,7 +570,7 @@ body.modal-open {
     /* box-shadow: -4px 0 20px rgba(88, 166, 255, 0.3); optional blue glow */
 }
 
-.modal.editing #transcriptText {
+.modal.editing #transcriptText, #promptText {
     background-color: #1b2638; /* darker text area during edit */
 }
 
