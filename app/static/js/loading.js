@@ -11,6 +11,10 @@ eventSource.onmessage = function(event) {
     if (data.message) {
         document.getElementById('progress-message').textContent = data.message;
     }
+
+    if (data.warning) {
+        showTotalMismatch(data.warning);
+    }
     
     if (data.done) {
         eventSource.close();
@@ -35,3 +39,15 @@ eventSource.onerror = function(error) {
         window.location.href = `/job/${jobId}`;
     }, 2000);
 };
+
+
+function showTotalMismatch(message) {
+    let footer = document.getElementById('mismatch-footer');
+    if (!footer) {
+        footer = document.createElement('div');
+        footer.id = 'mismatch-footer';
+        footer.className = 'save-reminder show';
+        footer.innerHTML = `⚠️ ${message} ⚠️`;
+        document.body.appendChild(footer);
+    }
+}

@@ -3,7 +3,7 @@ from datetime import datetime
 from app.models import PipelineJob, Lead
 from app.services.podium_client import start_podium_subprocess, perform_verification, continue_podium_subprocess, search_number
 from app.services.sentiment_analyzer import analyze_sentiment
-from app.services.glsa_client import start_glsa_subprocess, continue_glsa_subprocess, get_final_index, fill_form
+from app.services.glsa_client import start_glsa_subprocess, continue_glsa_subprocess, retrieve_current_lead, get_final_index, fill_form
 from app.services.browser_utils import cleanup_driver
 from app import db
 import threading
@@ -227,7 +227,8 @@ def completion_stream(job_id):
         end_date = max(dates)#.strftime("%b %d %Y")
         #print(start_date, end_date)
 
-        continue_glsa_subprocess(driver, total_records=Lead.query.filter_by(job_id=job_id).count(), start_date=start_date, end_date=end_date)
+        # function will work by itself
+        total_frontend_leads = continue_glsa_subprocess(driver, total_records=Lead.query.filter_by(job_id=job_id).count(), start_date=start_date, end_date=end_date)
 
         job = PipelineJob.query.get_or_404(job_id)
         #job = db.session.get(PipelineJob, job_id) instead of PipelineJob.query.get(job_id)
@@ -239,8 +240,17 @@ def completion_stream(job_id):
         if total == 0:
             yield f"data: {json.dumps({'message': 'No lead forms to complete', 'done': True})}\n\n"
             return
-        
+                
+        # set final index with database job total
         final_index = get_final_index(len(Lead.query.filter_by(job_id=job_id).all()))
+
+        # edge case: if total found in database does not match total found on frontend use frontend total
+        # warning message will be displayed in loading page
+        if total_frontend_leads != total:
+            # recalculate final index
+            final_index = get_final_index(total_frontend_leads)
+            # send warning
+            yield f"data: {json.dumps({'warning': f'Warning: Found {total_frontend_leads} leads on frontend but {total} in database'})}\n\n"
 
         for i, lead in enumerate(leads, 1):
             # Send progress update
@@ -250,10 +260,30 @@ def completion_stream(job_id):
             #import time
             #time.sleep(0.25)
             #print(lead.grade, lead.grade_secondary) if lead.grade_secondary else print(lead.grade)
-            
-            fill_form(driver, lead.grade, lead.grade_secondary, final_index)
-            lead.status = 'completed'
-            db.session.commit()
+
+            # check if frontend lead matches database lead
+            current_frontend_lead = retrieve_current_lead(driver, final_index)
+            # leads match (should be most cases), proceed as normal
+            if current_frontend_lead == lead.phone:
+                fill_form(driver, lead.grade, lead.grade_secondary, final_index)
+                lead.status = 'completed'
+                db.session.commit()
+            # leads DO NOT match, try searching for lead in database
+            elif current_frontend_lead != lead.phone:
+                print(f'Frontend lead: {current_frontend_lead} does not match current database lead :{lead.phone}')
+                print('Trying to find frontend lead in database...')
+                # try to find the frontend lead in the database
+                matching_lead = Lead.query.filter_by(job_id=job_id, phone=current_frontend_lead, status='analyzed').first()
+                # if one exists, use that lead
+                if matching_lead is not None:
+                    print('Found frontend lead in database')
+                    fill_form(driver, matching_lead.grade, matching_lead.grade_secondary, final_index)
+                    matching_lead.status = 'completed'
+                    db.session.commit()
+                # no lead was found, exit loop
+                elif matching_lead is None:
+                    print('Nothing found in database, exiting loop')
+                    break
 
         # check if all leads are analyzed
         all_leads = Lead.query.filter_by(job_id=job_id).all()
@@ -268,6 +298,20 @@ def completion_stream(job_id):
         cleanup_driver(driver)
         with driver_lock:
             active_drivers.pop(f'glsa_{job_id}', None)
+
+@bp.route('/<int:job_id>/mark-complete/<int:lead_id>', methods=['POST'])
+def mark_complete(job_id, lead_id):
+    lead = Lead.query.filter_by(id=lead_id, job_id=job_id).first_or_404()
+    lead.status = 'completed'
+    
+    # Check if all leads are completed
+    leads = Lead.query.filter_by(job_id=job_id).all()
+    if all(l.status == 'completed' for l in leads):
+        job = PipelineJob.query.get_or_404(job_id)
+        job.status = 'completed'
+    
+    db.session.commit()
+    return redirect(url_for('jobs.detail', job_id=job_id))
 
 
 # -------------------------------------- save table --------------------------------------

@@ -268,7 +268,7 @@ body.no-scroll {
 
 /* ---------------------- csv upload button form ---------------------- */
 #csvForm button {
-    background-color: var(--accent-color);
+    background-color: #a47a1e; 
     color: var(--text-primary);
     border: none;
     padding: 12px 24px;
@@ -281,7 +281,7 @@ body.no-scroll {
 }
 
 #csvForm button:hover {
-    background-color: #3160a0; /* slightly darker accent for hover */
+    background-color: #c28f27;   /* slightly darker accent for hover */
     transform: translateY(-2px);
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
 }
@@ -737,6 +737,14 @@ body.modal-open {
     color: var(--text-secondary);
 }
 
+/* ---------------------- setting card styles ---------------------- */
+#settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 20px auto;
+    max-width: 525px;
+}
 
 /* ---------------------- job card styles ---------------------- */
 #jobs-list {
@@ -849,7 +857,7 @@ body.modal-open {
 }
 
 .nav-item:hover {
-    color: var(--accent-color);
+    color: #8ac3ff;
 }
 
 .nav-item.active {
