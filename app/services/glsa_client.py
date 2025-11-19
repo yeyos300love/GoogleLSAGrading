@@ -74,7 +74,7 @@ def continue_glsa_subprocess(driver, total_records, start_date, end_date):
         # broswer-use agent help select correct dates
         asyncio.run(run_agent(start_date, end_date))
         # apply custom date
-        wait_and_find_element(driver,By.CSS_SELECTOR, '[role="button"][aria-label="Apply"]').click()
+        wait_and_find_element(driver, By.CSS_SELECTOR, '[role="button"][aria-label="Apply"]').click()
 
     # navigate to final page
     clicks_needed = calculate_clicks_to_last_page(total_records)
@@ -83,9 +83,23 @@ def continue_glsa_subprocess(driver, total_records, start_date, end_date):
         #next_button = WebDriverWait(driver, 5).until(
         #    EC.element_to_be_clickable((By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[2]/span/div[2]/div/div[2]/c-wiz/div/span[2]/span[3]/span'))
         #)
-        next_button = wait_and_find_element(By.CSS_SELECTOR, 'span[data-paginate="next"]')
+        next_button = wait_and_find_element(driver, By.CSS_SELECTOR, 'span[data-paginate="next"]')
         next_button.click()
         time.sleep(2)  # wait for page to load
+
+    # does not need a return to work
+    # locate total leads e.g., 1-20 of 187
+    total_leads_text = wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[4]/span/div[2]/div/div[2]/c-wiz/div/span[2]/span[1]').text
+    # extract & return total leads
+    return int(total_leads_text.split('of ')[1]) # e.g., 1-20 of 187
+    #return get_final_index(total_glsa)
+
+
+
+def retrieve_current_lead(driver, index) -> str:
+    # table is 1-indexed for xpath index
+    index = index + 1
+    return wait_and_find_element(driver, By.XPATH, f'//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[4]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[{index}]/td[1]/div/span').text
 
 
 def fill_form(driver, grade, grade_secondary, index):
@@ -101,6 +115,7 @@ def fill_form(driver, grade, grade_secondary, index):
     grade_secondary_index = convert_grade_secondary_to_index(grade_secondary)
 
     # select final lead
+    # table is 0-indexed for css style
     wait_and_find_element(driver, By.CSS_SELECTOR, f'tr[data-row-id="{index}"]').click()
     #wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[3]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[11]/td[1]/div/span').text
 

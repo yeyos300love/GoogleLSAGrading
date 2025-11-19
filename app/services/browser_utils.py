@@ -16,6 +16,7 @@ def create_driver(headless=False):
         if headless:
             replit_options.add_argument('--headless')
         replit_options.add_argument('--disable-dev-shm-usage')
+        replit_options.add_argument('--remote-debugging-port=9223') # needed for browser-use agent connecting via CDP
         replit_options.add_argument('--window-size=1920,1080')  # Add window size
         replit_options.add_argument('--start-maximized')  # Add maximize
         
@@ -38,6 +39,7 @@ def create_driver(headless=False):
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument('--remote-debugging-port=9223') # needed for browser-use agent connecting via CDP
         options.add_argument("--window-size=1920,1080")  # Set a specific window size
         options.add_argument("--start-maximized")
         options.add_experimental_option("detach", True) # keep browser open after script finishes

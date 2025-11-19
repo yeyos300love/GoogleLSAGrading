@@ -63,12 +63,12 @@
     {% if job.status == 'completed' %}
     <div class="phase-card">
             <div class="phase-card-content">
-                <h2>✅ Pipeline Complete!</h2>
+                <h2>✅ Job Pipeline Complete!</h2>
                 <p>All {{ job.total_records }} customers fully processed.</p>
             </div>
             <div class="phase-card-actions">
-                <a href="/list-jobs" class="service-button">See All Jobs</a>
-                <a href="/" class="service-button">Dashboard</a>
+                <a href="/list-jobs" class="service-button" style="text-decoration: none;">Dashboard</a>
+                <a href="/" class="service-button" style="text-decoration: none;">Home</a>
             </div>
     </div>
     {% endif %}
@@ -99,6 +99,11 @@
                     <span class="status-{{ customer.status }}">
                         {{ customer.status }}
                     </span>
+                    {% if job.status == 'analyzed' and customer.status == 'analyzed' %}
+                        <form method="POST" action="{{ url_for('jobs.mark_complete', job_id=job.id, lead_id=customer.id) }}" style="display: inline; padding-left: 8px;">
+                            <button type="submit" class="save-button" style="font-size: 0.8em; padding: 4px 8px;">Mark Done</button>
+                        </form>
+                    {% endif %}
                 </td>
                 <td>
                     {% if job.status == 'pending' %}
