@@ -94,3 +94,19 @@ function savePrompt(event) {
         }
     });
 }
+
+// Click outside modal to close
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('promptModal');
+
+    // Only trigger if modal is open
+    if (!modal.classList.contains('show')) return;
+
+    // Do NOT close if clicking the button that opens the modal
+    if (event.target.closest('.open-prompt-btn')) return; // Replace with your actual button class
+
+    // Close only if click is outside the modal
+    if (!modal.contains(event.target)) {
+        closePromptModal();
+    }
+});
