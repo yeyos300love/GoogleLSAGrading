@@ -119,7 +119,7 @@ def fill_form(driver, grade, grade_secondary, index):
     wait_and_find_element(driver, By.CSS_SELECTOR, f'tr[data-row-id="{index}"]').click()
     #wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/c-wiz/c-wiz/div[2]/div[3]/span/div[2]/div/div[1]/div/table/tbody[2]/tr[11]/td[1]/div/span').text
 
-    rate_lead_button = wait_and_find_element(By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[2]/span/div[2]/div/div/div[1]/div[2]/div/button/span')
+    rate_lead_button = wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[2]/span/div[2]/div/div/div[1]/div[2]/div/button/span')
     time.sleep(1)
     rate_lead_button.click()
 
@@ -177,9 +177,12 @@ def fill_form(driver, grade, grade_secondary, index):
         wait_and_find_element(driver, By.XPATH, '/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div/sc-survey-single-select-button[5]/div/button/div[2]').click()
         # select secondary grade
         wait_and_find_element(driver, By.XPATH, f'/html/body/sc-survey-survey-manager/div/div[2]/div/sc-survey-single-select-question/div[1]/sc-survey-single-select-button[{grade_secondary_index}]/div').click()
+        # switch driver to back original
+        driver.switch_to.default_content()
+        time.sleep(1)
         # "done" with form survey
         wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/div[5]/div[2]/div/div[2]/div/button').click()
-        time.sleep(2)
+        time.sleep(4)
         # archive lead
         wait_and_find_element(driver, By.XPATH, '//*[@id="yDmH0d"]/c-wiz[2]/c-wiz/div[1]/div[1]/div/div[2]/div[2]/div[1]/span/span').click()
         time.sleep(1)

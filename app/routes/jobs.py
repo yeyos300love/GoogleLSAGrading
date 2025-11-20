@@ -227,11 +227,12 @@ def completion_stream(job_id):
         end_date = max(dates)#.strftime("%b %d %Y")
         #print(start_date, end_date)
 
-        # function will work by itself
+        # function will work by itself, i.e., not set to a variable
         total_frontend_leads = continue_glsa_subprocess(driver, total_records=Lead.query.filter_by(job_id=job_id).count(), start_date=start_date, end_date=end_date)
 
         job = PipelineJob.query.get_or_404(job_id)
         #job = db.session.get(PipelineJob, job_id) instead of PipelineJob.query.get(job_id)
+        total_database_leads = Lead.query.filter_by(job_id=job_id).count()
 
         # get only leads that are analyzed
         leads = Lead.query.filter_by(job_id=job_id, status='analyzed').all()
@@ -242,15 +243,15 @@ def completion_stream(job_id):
             return
                 
         # set final index with database job total
-        final_index = get_final_index(len(Lead.query.filter_by(job_id=job_id).all()))
+        final_index = get_final_index(total_database_leads)
 
         # edge case: if total found in database does not match total found on frontend use frontend total
         # warning message will be displayed in loading page
-        if total_frontend_leads != total:
+        if total_frontend_leads != total_database_leads:
             # recalculate final index
             final_index = get_final_index(total_frontend_leads)
             # send warning
-            yield f"data: {json.dumps({'warning': f'Warning: Found {total_frontend_leads} leads on frontend but {total} in database'})}\n\n"
+            yield f"data: {json.dumps({'warning': f'Warning: Found {total_frontend_leads} leads on frontend but {total_database_leads} in database'})}\n\n"
 
         for i, lead in enumerate(leads, 1):
             # Send progress update
