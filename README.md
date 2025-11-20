@@ -64,12 +64,14 @@ GoogleLSAGrading/
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── job.py                  # PipelineJob db model
-│   │   └── lead.py                 # Lead db model
+│   │   ├── lead.py                 # Lead db model
+│   │   └── prompt.py               # Prompt db model
 │   │
 │   ├── routes/
 │   │   ├── __init__.py
 │   │   ├── dashboard.py            # main page UI routes (/, /upload)
-│   │   └── jobs.py                 # job detail routes (/job/<id>)
+│   │   ├── jobs.py                 # job detail routes (/job/<id>)
+│   │   └── settings.py             # app setting routes (get_prompt)
 │   │
 │   ├── services/
 │   │   ├── __init__.py
@@ -95,6 +97,9 @@ GoogleLSAGrading/
 │   │   │   ├── detail.html         # job details page
 │   │   │   ├── glsa.html           # GLSA login page
 │   │   │   └── podium.html         # Podium login
+│   │   │    
+│   │   ├── settings/
+│   │   │   ├── options.html        # all settings
 │   │   │
 │   │   └── errors/
 │   │       ├── 404.html
@@ -107,6 +112,7 @@ GoogleLSAGrading/
 │       │
 │       └── js/
 │           ├── 2fa.js              # handle podium 2fa code
+│           ├── edit-prompt.js      # handle pompt edits
 │           ├── grade-dropdown.js   # dropdown menu logic
 │           ├── grade-save.js       # save all grade changes
 │           ├── loading.js          # display stream message
